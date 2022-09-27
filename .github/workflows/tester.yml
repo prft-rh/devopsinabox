@@ -157,8 +157,9 @@ jobs:
       - name: Confirm current versions
         run: |
           echo "::debug::yq version"
+          echo "test"
           yq --version
-          echo "::debug::docker version"
+          echo "::notice::docker version"
           docker --version
           echo "::debug::operator-sdk version"
           operator-sdk version
@@ -175,27 +176,27 @@ jobs:
           helm template devopsinabox-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]
           then
-            echo "##[debug]Helm template devopsinabox-helm-chart compiled successfully."
+            echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
           else
-            echo "##[debug]Helm template devopsinabox-helm-chart failed to compile."
+            echo "::error::Helm template devopsinabox-helm-chart failed to compile."
             exit 1
           fi
 
           helm template devopsinabox-namespace-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]
           then
-            echo "##[debug]Helm template devopsinabox-namespace-helm-chart compiled successfully."
+            echo "::notice::Helm template devopsinabox-namespace-helm-chart compiled successfully."
           else
-            echo "##[debug]Helm template devopsinabox-namespace-helm-chart failed to compile."
+            echo "::error::Helm template devopsinabox-namespace-helm-chart failed to compile."
             exit 1
           fi
 
           helm template spring-boot-app-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]
           then
-            echo "##[debug]Helm template spring-boot-app-helm-chart compiled successfully."
+            echo "::notice::Helm template spring-boot-app-helm-chart compiled successfully."
           else
-            echo "##[debug]Helm template spring-boot-app-helm-chart failed to compile."
+            echo "::error::Helm template spring-boot-app-helm-chart failed to compile."
             exit 1
           fi
         shell: bash
