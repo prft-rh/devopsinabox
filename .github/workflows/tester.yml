@@ -238,9 +238,9 @@ jobs:
             - "jobs"
           EOF
 
-          VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
-          IMG=quay.io/shawn_stout_org/devopsinabox-operator:v$VERSION-$CHANNEL
-          BUNDLE_IMG=quay.io/shawn_stout_org/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
+          export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
+          export IMG=quay.io/shawn_stout_org/devopsinabox-operator:v$VERSION-$CHANNEL
+          export BUNDLE_IMG=quay.io/shawn_stout_org/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
           echo "IMG!"
           echo "$IMG"
@@ -269,9 +269,9 @@ jobs:
           echo "docker push"
           docker push $BUNDLE_IMG
 
-          CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
-          CATALOG_IMAGE_LATEST=quay.io/shawn_stout_org/operators-catalog:latest
-          CATALOG_IMAGE_VERSION=quay.io/shawn_stout_org/operators-catalog:v$CATALOG_VERSION
+          export CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
+          export CATALOG_IMAGE_LATEST=quay.io/shawn_stout_org/operators-catalog:latest
+          export CATALOG_IMAGE_VERSION=quay.io/shawn_stout_org/operators-catalog:v$CATALOG_VERSION
           opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker
           docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_LATEST
