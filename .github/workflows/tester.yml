@@ -43,15 +43,15 @@ jobs:
 
     name: Build and Deploy DevOpsInABox
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 4
     steps:
 
       - name: Log inputs
         run: |
-          echo "::notice::increment_devops_version = "
-          echo "::notice::increment_catalog_version = "
-          echo "::notice::cloud_provider = "
-          echo "::notice::docker version = "
+          echo "::notice::increment_devops_version = ${{ inputs.increment_devops_version }}"
+          echo "::notice::increment_catalog_version = ${{ inputs.increment_catalog_version }}"
+          echo "::notice::cloud_provider = ${{ inputs.cloud_provider }}"
+          echo "::notice::first_run = ${{ inputs.first_run }}"
         shell: bash
 
       - uses: actions/checkout@v3
@@ -85,43 +85,24 @@ jobs:
       - name: Set versions
         id: set_versions
         run: |
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]
           then
                 TAG_VERSION="v0.0.0-$CHANNEL"
           fi
-          echo $TAG_VERSION
           echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=1' --header 'Authorization: Bearer $TOKEN')
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]
           then
                 TAG_VERSION="v0.0.0"
           fi
-          echo $TAG_VERSION
           echo "OLD_CATALOG_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
-          echo "now testing"
-          echo $OLD_VERSION
-          echo ${{ env.OLD_VERSION }}
-          echo $OLD_CATALOG_VERSION
-          echo ${{ env.OLD_CATALOG_VERSION }}
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
           CHANNEL: ${{ inputs.cloud_provider }}
-
-      - name: Check values two
-        run: |
-          ls
-          echo "testing!"
-          echo $OLD_VERSION
-          echo ${{ env.OLD_VERSION }}
-          echo "testing 2!"
-          echo $OLD_CATALOG_VERSION
-          echo ${{ env.OLD_CATALOG_VERSION }}
-          echo "testing 3!"
-        shell: bash
 
       - name: Install Operator SDK
         run: |
@@ -203,6 +184,15 @@ jobs:
             echo "::error::Helm template spring-boot-app-helm-chart failed to compile."
             exit 1
           fi
+
+          helm template devopsinabox-operator/src/dotnet-app-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "::notice::Helm template dotnet-app-helm-chart compiled successfully."
+          else
+            echo "::error::Helm template dotnet-app-helm-chart failed to compile."
+            exit 1
+          fi
         shell: bash
 
       # Login
@@ -244,8 +234,8 @@ jobs:
           EOF
 
           export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
-          export IMG=quay.io/shawn_stout_org/devopsinabox-operator:v$VERSION-$CHANNEL
-          export BUNDLE_IMG=quay.io/shawn_stout_org/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
+          export IMG=quay.io/ORGANIZATION/devopsinabox-operator:v$VERSION-$CHANNEL
+          export BUNDLE_IMG=quay.io/ORGANIZATION/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
@@ -253,27 +243,22 @@ jobs:
           yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           if [[ $FIRST_RUN == false ]]
           then
-            REPLACES=dataplatform.$OLD_VERSION
+            REPLACES=devopsinabox.$OLD_VERSION
             yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           else
             yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           fi
           NAME=devopsinabox.v$VERSION
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
-          echo "test login!"
-          docker login quay.io
-          echo "make bundle!"
+
           make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
-          echo "make docker build!"
           make docker-build docker-push
-          echo "make bundle build!"
           make bundle-build
-          echo "docker push"
           docker push $BUNDLE_IMG
 
           export CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
-          export CATALOG_IMAGE_LATEST=quay.io/shawn_stout_org/operators-catalog:latest
-          export CATALOG_IMAGE_VERSION=quay.io/shawn_stout_org/operators-catalog:v$CATALOG_VERSION
+          export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
+          export CATALOG_IMAGE_VERSION=quay.io/ORGANIZATION/operators-catalog:v$CATALOG_VERSION
           if [[ $FIRST_RUN == false ]]
           then
             opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
@@ -289,3 +274,4 @@ jobs:
           INCREMENT_CATALOG_VERSION: ${{ inputs.increment_catalog_version }}
           CHANNEL: ${{ inputs.cloud_provider }}
           FIRST_RUN: ${{ inputs.first_run }}
+          ORGANIZATION: shawn_stout_org
