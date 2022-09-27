@@ -234,8 +234,8 @@ jobs:
           EOF
 
           export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
-          export IMG=quay.io/ORGANIZATION/devopsinabox-operator:v$VERSION-$CHANNEL
-          export BUNDLE_IMG=quay.io/ORGANIZATION/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
+          export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION-$CHANNEL
+          export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
@@ -258,7 +258,7 @@ jobs:
 
           export CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
-          export CATALOG_IMAGE_VERSION=quay.io/ORGANIZATION/operators-catalog:v$CATALOG_VERSION
+          export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
           if [[ $FIRST_RUN == false ]]
           then
             opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
