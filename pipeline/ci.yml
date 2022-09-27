@@ -37,20 +37,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Check out repositories
-        run: |
-          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/devopsinabox-operator.git
-          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/spring-boot-app-helm-chart.git
-          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/devopsinabox-helm-chart.git
-          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/devopsinabox-namespace-helm-chart.git
-        shell: bash
-        env:
-          BRANCH: ${{ inputs.cloud_provider }}
-
-      - name: Install Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v3
         with:
-          python-version: '3.10'
+          repository: prft-rh/devopsinabox-operator
+          ref: ${{ inputs.cloud_provider }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/devopsinabox-helm-chart
+          ref: ${{ inputs.cloud_provider }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/devopsinabox-namespace-helm-chart
+          ref: ${{ inputs.cloud_provider }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/spring-boot-app-helm-chart
+          ref: ${{ inputs.cloud_provider }}
 
       - name: Set versions
         id: set_versions
@@ -61,7 +66,7 @@ jobs:
           echo "OLD_CATALOG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
         shell: bash
         env:
-          TOKEN: ${{ secrets.quay_api_token }}
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
 
       - name: Install Operator SDK
         run: |
@@ -145,8 +150,8 @@ jobs:
           docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
         shell: bash
         env:
-          QUAY_USERNAME: ${{ secrets.quay_robot_username }}
-          QUAY_PASSWORD: ${{ secrets.quay_robot_password }}
+          QUAY_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_ROBOT_PASSWORD }}
 
       - name: Generate operator files
         run: |

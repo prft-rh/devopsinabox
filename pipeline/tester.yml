@@ -1,0 +1,76 @@
+name: DevOpsInABox
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment_devops_version:
+        type: choice
+        description: Version increment for devopsinabox
+        required: true
+        default: 'patch'
+        options:
+        - major
+        - minor
+        - patch
+      increment_catalog_version:
+        type: choice
+        description: Version increment for catalog
+        required: true
+        default: 'patch'
+        options:
+        - major
+        - minor
+        - patch
+      cloud_provider:
+        type: choice
+        description: Used for branch and channel targeting
+        required: true
+        default: 'aws'
+        options:
+        - aws
+        - azure
+
+jobs:
+  build_devopsinabox:
+
+    name: Build and Deploy DevOpsInABox
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/devopsinabox-operator
+          ref: ${{ inputs.cloud_provider }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/devopsinabox-helm-chart
+          ref: ${{ inputs.cloud_provider }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/devopsinabox-namespace-helm-chart
+          ref: ${{ inputs.cloud_provider }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: prft-rh/spring-boot-app-helm-chart
+          ref: ${{ inputs.cloud_provider }}
+
+      - name: Check values
+        run: |
+          echo "testing!"
+          ls
+          echo "done testing!"
+        shell: bash
+
+      - name: Set versions
+        id: set_versions
+        run: |
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
+          echo "OLD_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
+          echo "OLD_CATALOG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
