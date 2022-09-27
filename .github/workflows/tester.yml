@@ -82,6 +82,7 @@ jobs:
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ -z "$TAG_VERSION" ]
           then
+                echo "tag is null"
                 TAG_VERSION="v0.0.0-$CHANNEL"
           fi
           echo $TAG_VERSION
@@ -90,6 +91,7 @@ jobs:
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ -z "$TAG_VERSION" ]
           then
+                echo "tag is null"
                 TAG_VERSION="v0.0.0-$CHANNEL"
           fi
           echo $TAG_VERSION
