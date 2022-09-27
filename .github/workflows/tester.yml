@@ -80,7 +80,7 @@ jobs:
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
-          if [ -z "$TAG_VERSION" ]
+          if [ "$TAG_VERSION" = "null" ]
           then
                 echo "tag is null"
                 TAG_VERSION="v0.0.0-$CHANNEL"
@@ -89,7 +89,7 @@ jobs:
           echo "OLD_VERSION=$TAG_VERSION" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
-          if [ -z "$TAG_VERSION" ]
+          if [ "$TAG_VERSION" = "null" ]
           then
                 echo "tag is null"
                 TAG_VERSION="v0.0.0-$CHANNEL"
