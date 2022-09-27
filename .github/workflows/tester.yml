@@ -60,7 +60,7 @@ jobs:
         with:
           repository: prft-rh/spring-boot-app-helm-chart
           ref: ${{ inputs.cloud_provider }}
-          path: prft-rh/spring-boot-app-helm-chart
+          path: spring-boot-app-helm-chart
 
       - name: Check values
         run: |
@@ -70,7 +70,7 @@ jobs:
           cd ..
           ls
           echo "testing 3!"
-          cd ..
+          cd devopsinabox
           ls
         shell: bash
 
@@ -78,12 +78,23 @@ jobs:
         id: set_versions
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
-          echo "OLD_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
+          TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
+          if [ -z "$TAG_VERSION" ]
+          then
+                TAG_VERSION="v0.0.0-$CHANNEL"
+          fi
+          echo "OLD_VERSION=$TAG_VERSION" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
-          echo "OLD_CATALOG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
+          TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
+          if [ -z "$TAG_VERSION" ]
+          then
+                TAG_VERSION="v0.0.0-$CHANNEL"
+          fi
+          echo "OLD_CATALOG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          CHANNEL: ${{ inputs.cloud_provider }}
 
       - name: Check values two
         run: |
