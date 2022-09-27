@@ -242,6 +242,11 @@ jobs:
           IMG=quay.io/shawn_stout_org/devopsinabox-operator:v$VERSION-$CHANNEL
           BUNDLE_IMG=quay.io/shawn_stout_org/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
+          echo "IMG!"
+          echo "$IMG"
+          echo "bundle!"
+          echo "$BUNDLE_IMG"
+
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           DATE="$(date +'%Y-%m-%d %H:%M:%SZ')"
@@ -251,12 +256,15 @@ jobs:
           NAME=devopsinabox.v$VERSION
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           
+          echo "make bundle!"
           make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
+          echo "make docker build!"
           make docker-build docker-push
+          echo "make bundle build!"
           make bundle-build
-          echo "bundle!"
-          echo "$BUNDLE_IMG"
+          echo "docker push"
           docker push $BUNDLE_IMG
+
           CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           CATALOG_IMAGE_LATEST=quay.io/shawn_stout_org/operators-catalog:latest
           CATALOG_IMAGE_VERSION=quay.io/shawn_stout_org/operators-catalog:v$CATALOG_VERSION
