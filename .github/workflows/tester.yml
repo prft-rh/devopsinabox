@@ -237,9 +237,9 @@ jobs:
             - "jobs"
           EOF
 
-          VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
-          IMG=nubiumoperators.azurecr.io/devopsinabox-operator:v$VERSION-$CHANNEL
-          BUNDLE_IMG=nubiumoperators.azurecr.io/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
+          VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
+          IMG=quay.io/shawn_stout_org/devopsinabox-operator:v$VERSION-$CHANNEL
+          BUNDLE_IMG=quay.io/shawn_stout_org/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
@@ -255,9 +255,9 @@ jobs:
           make bundle-build
           docker push $BUNDLE_IMG
 
-          CATALOG_VERSION=$(../tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
-          CATALOG_IMAGE_LATEST=nubiumoperators.azurecr.io/operators-catalog:latest
-          CATALOG_IMAGE_VERSION=nubiumoperators.azurecr.io/operators-catalog:v$CATALOG_VERSION
+          CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
+          CATALOG_IMAGE_LATEST=quay.io/shawn_stout_org/operators-catalog:latest
+          CATALOG_IMAGE_VERSION=quay.io/shawn_stout_org/operators-catalog:v$CATALOG_VERSION
           opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker
           docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_LATEST
