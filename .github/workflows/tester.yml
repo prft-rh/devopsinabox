@@ -246,7 +246,8 @@ jobs:
           echo "$IMG"
           echo "bundle!"
           echo "$BUNDLE_IMG"
-          
+          echo "ls!"
+          ls
 
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
@@ -254,7 +255,7 @@ jobs:
           yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/dataplatform.clusterserviceversion.yaml
           REPLACES=devopsinabox.$OLD_VERSION
           yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
-          yq -i 'del(.spec.replaces)' config/manifests/bases/dataplatform.clusterserviceversion.yaml
+          yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           NAME=devopsinabox.v$VERSION
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           echo "test login!"
