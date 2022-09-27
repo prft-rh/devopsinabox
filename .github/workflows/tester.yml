@@ -78,3 +78,13 @@ jobs:
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+
+      - name: Check values two
+        run: |
+          ls
+          echo "testing!"
+          echo $OLD_VERSION
+          echo "testing 2!"
+          echo $OLD_CATALOG_VERSION
+          echo "testing 3!"
+        shell: bash
