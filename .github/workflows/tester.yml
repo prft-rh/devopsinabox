@@ -89,14 +89,14 @@ jobs:
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]
           then
-                TAG_VERSION="v0.0.0-$CHANNEL"
+            TAG_VERSION="v0.0.0-$CHANNEL"
           fi
           echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]
           then
-                TAG_VERSION="v0.0.0"
+            TAG_VERSION="v0.0.0"
           fi
           echo "OLD_CATALOG_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
         shell: bash
