@@ -29,6 +29,14 @@ on:
         options:
         - aws
         - azure
+      first_run:
+        type: choice
+        description: Whether it is a first run
+        required: true
+        default: 'false'
+        options:
+        - true
+        - false
 
 jobs:
   build_devopsinabox:
@@ -37,6 +45,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+
+      - name: Log inputs
+        run: |
+          echo "::notice::increment_devops_version = "
+          echo "::notice::increment_catalog_version = "
+          echo "::notice::cloud_provider = "
+          echo "::notice::docker version = "
+        shell: bash
 
       - uses: actions/checkout@v3
         with:
@@ -65,15 +81,6 @@ jobs:
           repository: prft-rh/spring-boot-app-helm-chart
           ref: ${{ inputs.cloud_provider }}
           path: spring-boot-app-helm-chart
-
-      - name: Check values
-        run: |
-          echo "testing!"
-          ls
-          echo "testing 2!"
-          cd scripts
-          ls
-        shell: bash
 
       - name: Set versions
         id: set_versions
@@ -242,20 +249,17 @@ jobs:
           export IMG=quay.io/shawn_stout_org/devopsinabox-operator:v$VERSION-$CHANNEL
           export BUNDLE_IMG=quay.io/shawn_stout_org/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
-          echo "IMG!"
-          echo "$IMG"
-          echo "bundle!"
-          echo "$BUNDLE_IMG"
-          echo "ls!"
-          ls
-
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           DATE="$(date +'%Y-%m-%d %H:%M:%SZ')"
           yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
-          REPLACES=devopsinabox.$OLD_VERSION
-          yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
-          yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          if [[ $FIRST_RUN == false ]]
+          then
+            REPLACES=dataplatform.$OLD_VERSION
+            yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          else
+            yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          fi
           NAME=devopsinabox.v$VERSION
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           echo "test login!"
@@ -272,7 +276,12 @@ jobs:
           export CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           export CATALOG_IMAGE_LATEST=quay.io/shawn_stout_org/operators-catalog:latest
           export CATALOG_IMAGE_VERSION=quay.io/shawn_stout_org/operators-catalog:v$CATALOG_VERSION
-          opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker
+          if [[ $FIRST_RUN == false ]]
+          then
+            opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
+          else
+            opm index add --bundles $BUNDLE_IMG --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
+          fi
           docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_VERSION
@@ -281,3 +290,4 @@ jobs:
           INCREMENT_DEVOPS_VERSION: ${{ inputs.increment_devops_version }}
           INCREMENT_CATALOG_VERSION: ${{ inputs.increment_catalog_version }}
           CHANNEL: ${{ inputs.cloud_provider }}
+          FIRST_RUN: ${{ inputs.first_run }}
