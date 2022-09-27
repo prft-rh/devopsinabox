@@ -42,21 +42,25 @@ jobs:
         with:
           repository: prft-rh/devopsinabox-operator
           ref: ${{ inputs.cloud_provider }}
+          path: devopsinabox-operator
 
       - uses: actions/checkout@v3
         with:
           repository: prft-rh/devopsinabox-helm-chart
           ref: ${{ inputs.cloud_provider }}
+          path: devopsinabox-helm-chart
 
       - uses: actions/checkout@v3
         with:
           repository: prft-rh/devopsinabox-namespace-helm-chart
           ref: ${{ inputs.cloud_provider }}
+          path: devopsinabox-namespace-helm-chart
 
       - uses: actions/checkout@v3
         with:
           repository: prft-rh/spring-boot-app-helm-chart
           ref: ${{ inputs.cloud_provider }}
+          path: prft-rh/spring-boot-app-helm-chart
 
       - name: Check values
         run: |
