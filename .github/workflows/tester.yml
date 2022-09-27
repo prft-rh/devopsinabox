@@ -154,12 +154,57 @@ jobs:
           rm opm-linux.tar.gz
         shell: bash
 
-      - name: Check versions
+      - name: Confirm current versions
         run: |
+          echo "::debug::yq version"
           yq --version
+          echo "::debug::docker version"
           docker --version
+          echo "::debug::operator-sdk version"
           operator-sdk version
+          echo "::debug::git version"
           git --version
+          echo "::debug::opm version"
           opm version
+          echo "::debug::helm version"
           helm version
         shell: bash
+
+      - name: Helm Check
+        run: |
+          helm template devopsinabox-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "##[debug]Helm template devopsinabox-helm-chart compiled successfully."
+          else
+            echo "##[debug]Helm template devopsinabox-helm-chart failed to compile."
+            exit 1
+          fi
+
+          helm template devopsinabox-namespace-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "##[debug]Helm template devopsinabox-namespace-helm-chart compiled successfully."
+          else
+            echo "##[debug]Helm template devopsinabox-namespace-helm-chart failed to compile."
+            exit 1
+          fi
+
+          helm template spring-boot-app-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "##[debug]Helm template spring-boot-app-helm-chart compiled successfully."
+          else
+            echo "##[debug]Helm template spring-boot-app-helm-chart failed to compile."
+            exit 1
+          fi
+        shell: bash
+
+      # Login
+      - name: Login to Quay Registry
+        run: |
+          docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
+        shell: bash
+        env:
+          QUAY_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_ROBOT_PASSWORD }}
