@@ -66,6 +66,8 @@ jobs:
           cd ..
           ls
           echo "testing 3!"
+          cd ..
+          ls
         shell: bash
 
       - name: Set versions
@@ -84,7 +86,9 @@ jobs:
           ls
           echo "testing!"
           echo $OLD_VERSION
+          echo ${{ env.OLD_VERSION }}
           echo "testing 2!"
           echo $OLD_CATALOG_VERSION
+          echo ${{ env.OLD_CATALOG_VERSION }}
           echo "testing 3!"
         shell: bash
