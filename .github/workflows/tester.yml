@@ -246,6 +246,7 @@ jobs:
           echo "$IMG"
           echo "bundle!"
           echo "$BUNDLE_IMG"
+          
 
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
