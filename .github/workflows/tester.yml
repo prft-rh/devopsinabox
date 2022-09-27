@@ -237,11 +237,6 @@ jobs:
           export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION-$CHANNEL
           export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
 
-          echo "TEST"
-          echo $OLD_VERSION
-          echo $VERSION
-          echo "END TEST"
-
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           DATE="$(date +'%Y-%m-%d %H:%M:%SZ')"
@@ -253,7 +248,7 @@ jobs:
           else
             yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           fi
-          NAME=devopsinabox.v$VERSION
+          NAME=devopsinabox.v$VERSION-$CHANNEL
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
 
           make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
