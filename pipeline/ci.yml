@@ -1,0 +1,209 @@
+name: DevOpsInABox
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment_devops_version:
+        type: choice
+        description: Version increment for devopsinabox
+        required: true
+        default: 'patch'
+        options:
+        - major
+        - minor
+        - patch
+      increment_catalog_version:
+        type: choice
+        description: Version increment for catalog
+        required: true
+        default: 'patch'
+        options:
+        - major
+        - minor
+        - patch
+      cloud_provider:
+        type: choice
+        description: Used for branch and channel targeting
+        required: true
+        default: 'aws'
+        options:
+        - aws
+        - azure
+
+jobs:
+  build_devopsinabox:
+
+    name: Build and Deploy DevOpsInABox
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out repositories
+        run: |
+          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/devopsinabox-operator.git
+          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/spring-boot-app-helm-chart.git
+          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/devopsinabox-helm-chart.git
+          git clone --branch $BRANCH --single-branch git@github.com:prft-rh/devopsinabox-namespace-helm-chart.git
+        shell: bash
+        env:
+          BRANCH: ${{ inputs.cloud_provider }}
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set versions
+        id: set_versions
+        run: |
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
+          echo "OLD_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
+          echo "OLD_CATALOG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)" >> $GITHUB_ENV
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.quay_api_token }}
+
+      - name: Install Operator SDK
+        run: |
+          export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+          export OS=$(uname | awk '{print tolower($0)}')
+
+          export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.15.0
+          curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+
+          gpg --keyserver keyserver.ubuntu.com --recv-keys 052996E2A20B5C7E
+
+          curl -LO ${OPERATOR_SDK_DL_URL}/checksums.txt
+          curl -LO ${OPERATOR_SDK_DL_URL}/checksums.txt.asc
+          gpg -u "Operator SDK (release) <cncf-operator-sdk@cncf.io>" --verify checksums.txt.asc
+
+          grep operator-sdk_${OS}_${ARCH} checksums.txt | sha256sum -c -
+
+          chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+
+          rm checksums.txt
+          rm checksums.txt.asc
+        shell: bash
+
+      - name: Install Openshift CLI Tools
+        run: |
+          echo $PATH
+          curl https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz > openshift-client-linux.tar.gz
+          curl https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/opm-linux.tar.gz > opm-linux.tar.gz
+          mkdir openshift
+          tar -zxvf openshift-client-linux.tar.gz -C openshift
+          tar -zxvf opm-linux.tar.gz -C openshift
+          echo 'export PATH=$PATH:~/openshift' >> ~/.bashrc && source ~/.bashrc
+          sudo mv ./openshift/opm /usr/local/bin/
+          rm openshift-client-linux.tar.gz
+          rm opm-linux.tar.gz
+        shell: bash
+
+      - name: Check versions
+        run: |
+          yq --version
+          docker --version
+          operator-sdk version
+          git --version
+          opm version
+          helm version
+        shell: bash
+
+      - name: Helm Check
+        run: |
+          helm template devopsinabox-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "##[debug]Helm template devopsinabox-helm-chart compiled successfully."
+          else
+            echo "##[debug]Helm template devopsinabox-helm-chart failed to compile."
+            exit 1
+          fi
+
+          helm template devopsinabox-namespace-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "##[debug]Helm template devopsinabox-namespace-helm-chart compiled successfully."
+          else
+            echo "##[debug]Helm template devopsinabox-namespace-helm-chart failed to compile."
+            exit 1
+          fi
+
+          helm template spring-boot-app-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "##[debug]Helm template spring-boot-app-helm-chart compiled successfully."
+          else
+            echo "##[debug]Helm template spring-boot-app-helm-chart failed to compile."
+            exit 1
+          fi
+        shell: bash
+
+      # Login
+      - name: Login to Quay Registry
+        run: |
+          docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
+        shell: bash
+        env:
+          QUAY_USERNAME: ${{ secrets.quay_robot_username }}
+          QUAY_PASSWORD: ${{ secrets.quay_robot_password }}
+
+      - name: Generate operator files
+        run: |
+          mkdir devopsinabox
+          cd devopsinabox
+    
+          operator-sdk init --plugins=helm --domain=com.perficient --group=apimc --version=v1alpha1 --kind=DevSecOpsManager --helm-chart=../devopsinabox-helm-chart
+          operator-sdk create api --group=apimc --version=v1alpha1 --kind=ManagedNamespace --helm-chart=../devopsinabox-namespace-helm-chart
+          operator-sdk create api --group=apimc --version=v1alpha1 --kind=SpringBootApp --helm-chart=../spring-boot-app-helm-chart
+          operator-sdk create api --group=apimc --version=v1alpha1 --kind=DotNetApp --helm-chart=../devopsinabox-operator/src/dotnet-app-helm-chart
+
+          rm -Rf ../devopsinabox-operator/helm-charts
+
+          cp -R . ../devopsinabox-operator
+          cd ../devopsinabox-operator
+          
+          cat << EOF >> config/default/kustomization.yaml
+          patches:
+          - path: manager-memory.yaml
+          EOF
+
+          cat <<EOF >> config/rbac/role.yaml
+          - verbs:
+            - "*"
+            apiGroups:
+            - "batch"
+            resources:
+            - "jobs"
+          EOF
+
+          VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
+          IMG=nubiumoperators.azurecr.io/devopsinabox-operator:v$VERSION-$CHANNEL
+          BUNDLE_IMG=nubiumoperators.azurecr.io/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
+
+          yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          DATE="$(date +'%Y-%m-%d %H:%M:%SZ')"
+          yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          REPLACES=devopsinabox.$OLD_VERSION
+          yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          NAME=devopsinabox.v$VERSION
+          yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          
+          make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
+          make docker-build docker-push
+          make bundle-build
+          docker push $BUNDLE_IMG
+
+          CATALOG_VERSION=$(../tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
+          CATALOG_IMAGE_LATEST=nubiumoperators.azurecr.io/operators-catalog:latest
+          CATALOG_IMAGE_VERSION=nubiumoperators.azurecr.io/operators-catalog:v$CATALOG_VERSION
+          opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker
+          docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
+          docker push $CATALOG_IMAGE_LATEST
+          docker push $CATALOG_IMAGE_VERSION
+        shell: bash
+        env:
+          INCREMENT_DEVOPS_VERSION: ${{ inputs.increment_devops_version }}
+          INCREMENT_CATALOG_VERSION: ${{ inputs.increment_catalog_version }}
+          CHANNEL: ${{ inputs.cloud_provider }}
