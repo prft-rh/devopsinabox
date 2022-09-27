@@ -40,6 +40,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
+          path: scripts
+
+      - uses: actions/checkout@v3
+        with:
           repository: prft-rh/devopsinabox-operator
           ref: ${{ inputs.cloud_provider }}
           path: devopsinabox-operator
@@ -67,10 +71,7 @@ jobs:
           echo "testing!"
           ls
           echo "testing 2!"
-          cd ..
-          ls
-          echo "testing 3!"
-          cd devopsinabox
+          cd scripts
           ls
         shell: bash
 
@@ -83,6 +84,7 @@ jobs:
           then
                 TAG_VERSION="v0.0.0-$CHANNEL"
           fi
+          echo $TAG_VERSION
           echo "OLD_VERSION=$TAG_VERSION" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=100' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
@@ -90,7 +92,13 @@ jobs:
           then
                 TAG_VERSION="v0.0.0-$CHANNEL"
           fi
+          echo $TAG_VERSION
           echo "OLD_CATALOG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+          echo "now testing"
+          echo $OLD_VERSION
+          echo ${{ env.OLD_VERSION }}
+          echo $OLD_CATALOG_VERSION
+          echo ${{ env.OLD_CATALOG_VERSION }}
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
