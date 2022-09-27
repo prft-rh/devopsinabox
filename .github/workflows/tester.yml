@@ -255,7 +255,8 @@ jobs:
           yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           NAME=devopsinabox.v$VERSION
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
-          
+          echo "test login!"
+          docker login quay.io
           echo "make bundle!"
           make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
           echo "make docker build!"
