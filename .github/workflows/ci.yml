@@ -230,16 +230,16 @@ jobs:
             - "jobs"
           EOF
 
-          export VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
-          export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION-$BRANCH
-          export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION-$BRANCH
+          export VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)-$BRANCH
+          export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION
+          export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION
 
           echo "old version: $OLD_VERSION"
           echo "version: $VERSION"
           echo "img: $IMG"
           echo "bundle img: $BUNDLE_IMG"
 
-          yq -i eval '.spec.version = "'$VERSION-$BRANCH'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           DATE="$(date +'%Y-%m-%d %H:%M:%SZ')"
           yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
@@ -251,11 +251,11 @@ jobs:
           else
             yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           fi
-          NAME=devopsinabox.v$VERSION-$BRANCH
+          NAME=devopsinabox.v$VERSION
           echo "NAME: $NAME"
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
 
-          make bundle CHANNELS=$CLOUD_PROVIDER DEFAULT_CHANNEL=$CLOUD_PROVIDER
+          make bundle CHANNELS=$BRANCH DEFAULT_CHANNEL=$BRANCH
           make docker-build docker-push
           make bundle-build
           docker push $BUNDLE_IMG
