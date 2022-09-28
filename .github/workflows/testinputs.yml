@@ -56,9 +56,28 @@ jobs:
 
           if [ -z "${{ inputs.increment_devops_version }}" ]; then
             echo "no inputs!"
+            echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
           else
             echo "inputs!"
+            echo "INCREMENT_DEVOPS_VERSION=$(echo ${{ inputs.increment_devops_version }})" >> $GITHUB_ENV
           fi
+
+          if [ -z "${{ inputs.increment_catalog_version }}" ]; then
+            echo "no inputs!"
+            echo "INCREMENT_CATALOG_VERSION=patch" >> $GITHUB_ENV
+          else
+            echo "inputs!"
+            echo "INCREMENT_CATALOG_VERSION=$(echo ${{ inputs.increment_catalog_version }})" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.first_run }}" ]; then
+            echo "no inputs!"
+            echo "FIRST_RUN=false" >> $GITHUB_ENV
+          else
+            echo "inputs!"
+            echo "FIRST_RUN=$(echo ${{ inputs.first_run }})" >> $GITHUB_ENV
+          fi
+
         shell: bash
 
       - name: Log inputs
