@@ -56,7 +56,7 @@ jobs:
             echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
           else
             echo "NO"
-            echo "INCREMENT_DEVOPS_VERSION=$(echo ${{ inputs.increment_devops_version }}" >> $GITHUB_ENV
+            
           fi
           echo "END"
 
