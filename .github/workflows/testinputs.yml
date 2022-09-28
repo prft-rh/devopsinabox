@@ -50,15 +50,7 @@ jobs:
           else 
             echo "CLOUD_PROVIDER=$(echo ${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           fi
-          echo "START"
-          if [ -z "${{ inputs }}" ]; then
-            echo "YES"
-            echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
-          else
-            echo "NO"
-            
-          fi
-          echo "END"
+          
 
         shell: bash
 
