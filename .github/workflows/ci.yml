@@ -44,7 +44,7 @@ jobs:
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
           else
-            echo "CLOUD_PROVIDER=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+            echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
           fi
 
           if [ -z "${{ inputs.increment_devops_version }}" ]; then
@@ -70,9 +70,12 @@ jobs:
         run: |
           echo "::notice::increment_devops_version = $INCREMENT_DEVOPS_VERSION"
           echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
-          echo "::notice::cloud_provider = $CLOUD_PROVIDER"
+          echo "::notice::branch = $BRANCH"
           echo "::notice::first_run = $FIRST_RUN"
         shell: bash
+
+      - name: Checkout branch
+        uses: actions/checkout@v3
 
       - name: Set versions
         id: set_versions
@@ -81,7 +84,7 @@ jobs:
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]
           then
-            TAG_VERSION="v0.0.0"
+            TAG_VERSION="v0.0.0-$BRANCH"
           fi
           echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
@@ -224,7 +227,7 @@ jobs:
             - "jobs"
           EOF
 
-          export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
+          export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)-$BRANCH
           export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION
           export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION
 
