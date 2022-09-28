@@ -48,7 +48,10 @@ jobs:
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
           else 
-            echo "yay"
+            echo ${GITHUB_REF#refs/heads/}
+            XX=${GITHUB_REF#refs/heads/}
+            echo $XX
+            echo "CLOUD_PROVIDER=$(echo $XX)" >> $GITHUB_ENV
           fi
           
 
