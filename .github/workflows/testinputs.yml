@@ -44,6 +44,7 @@ jobs:
 
       - name: Set inputs
         run: |
+          echo "::notice::branch = ${GITHUB_REF#refs/heads/}"
           if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
