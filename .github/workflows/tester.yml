@@ -28,7 +28,6 @@ on:
         default: 'aws'
         options:
         - aws
-        - azure
       first_run:
         type: choice
         description: Whether it is a first run
