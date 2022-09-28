@@ -165,15 +165,6 @@ jobs:
             exit 1
           fi
 
-          helm template devopsinabox-helm-chart --dry-run > /dev/null
-          if [ $? -eq 0 ]
-          then
-            echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
-          else
-            echo "::error::Helm template devopsinabox-helm-chart failed to compile."
-            exit 1
-          fi
-
           helm template spring-boot-app-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]
           then
@@ -189,6 +180,15 @@ jobs:
             echo "::notice::Helm template dotnet-app-helm-chart compiled successfully."
           else
             echo "::error::Helm template dotnet-app-helm-chart failed to compile."
+            exit 1
+          fi
+
+          helm template devopsinabox-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
+          else
+            echo "::error::Helm template devopsinabox-helm-chart failed to compile."
             exit 1
           fi
         shell: bash
