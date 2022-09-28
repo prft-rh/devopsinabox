@@ -249,11 +249,13 @@ jobs:
           if [[ $FIRST_RUN == false ]]
           then
             REPLACES=devopsinabox.$OLD_VERSION
+            echo "REPLACES: $REPLACES"
             yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           else
             yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           fi
           NAME=devopsinabox.v$VERSION-$CHANNEL
+          echo "NAME: $NAME"
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
 
           make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
