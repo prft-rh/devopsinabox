@@ -70,14 +70,18 @@ jobs:
           fi
         shell: bash
 
+      - uses: actions/checkout@v3
+
       - name: Log inputs
         run: |
           echo "::notice::increment_devops_version = $INCREMENT_DEVOPS_VERSION"
           echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
           echo "::notice::cloud_provider = $CLOUD_PROVIDER"
           echo "::notice::first_run = $FIRST_RUN"
+          echo "one"
           ls
           cd ..
+          echo "two"
           ls
         shell: bash
 
