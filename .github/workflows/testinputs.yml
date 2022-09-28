@@ -44,9 +44,6 @@ jobs:
 
       - name: Set inputs
         run: |
-          echo "::notice::branch = ${GITHUB_REF#refs/heads/}"
-          echo "::notice::inputs = ${{ inputs }}"
-          echo "::notice::inputs.devops = ${{ inputs.increment_devops_version }}"
           if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
@@ -55,29 +52,22 @@ jobs:
           fi
 
           if [ -z "${{ inputs.increment_devops_version }}" ]; then
-            echo "no inputs!"
             echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
           else
-            echo "inputs!"
             echo "INCREMENT_DEVOPS_VERSION=$(echo ${{ inputs.increment_devops_version }})" >> $GITHUB_ENV
           fi
 
           if [ -z "${{ inputs.increment_catalog_version }}" ]; then
-            echo "no inputs!"
             echo "INCREMENT_CATALOG_VERSION=patch" >> $GITHUB_ENV
           else
-            echo "inputs!"
             echo "INCREMENT_CATALOG_VERSION=$(echo ${{ inputs.increment_catalog_version }})" >> $GITHUB_ENV
           fi
 
           if [ -z "${{ inputs.first_run }}" ]; then
-            echo "no inputs!"
             echo "FIRST_RUN=false" >> $GITHUB_ENV
           else
-            echo "inputs!"
             echo "FIRST_RUN=$(echo ${{ inputs.first_run }})" >> $GITHUB_ENV
           fi
-
         shell: bash
 
       - name: Log inputs
@@ -86,5 +76,6 @@ jobs:
           echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
           echo "::notice::cloud_provider = $CLOUD_PROVIDER"
           echo "::notice::first_run = $FIRST_RUN"
+          ls
         shell: bash
 
