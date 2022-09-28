@@ -243,6 +243,7 @@ jobs:
           yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           if [[ $FIRST_RUN == false ]]
           then
+            echo "running replace"
             REPLACES=devopsinabox.$OLD_VERSION
             yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           else
