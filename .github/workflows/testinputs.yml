@@ -42,20 +42,39 @@ jobs:
     timeout-minutes: 2
     steps:
 
-      - name: Extract branch name
-        shell: bash
+      - name: Set inputs
         run: |
           if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
+          else 
+            echo "CLOUD_PROVIDER=$(echo ${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           fi
-          echo "FIRST_RUN=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
-        id: extract_branch
 
-      - name: Log inputs deva
+          if [ -z "${{ inputs.increment_devops_version }}" ]; then
+            echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
+          else
+            echo "INCREMENT_DEVOPS_VERSION=$(echo ${{ inputs.increment_devops_version }}" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.increment_catalog_version }}" ]; then
+            echo "INCREMENT_CATALOG_VERSION=patch" >> $GITHUB_ENV
+          else
+            echo "INCREMENT_CATALOG_VERSION=$(echo ${{ inputs.increment_catalog_version }}" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.first_run }}" ]; then
+            echo "FIRST_RUN=false" >> $GITHUB_ENV
+          else
+            echo "FIRST_RUN=$(echo ${{ inputs.first_run }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Log inputs
         run: |
-          echo "::notice::increment_devops_version = ${{ inputs.increment_devops_version }}"
-          echo "::notice::increment_catalog_version = ${{ inputs.increment_catalog_version }}"
+          echo "::notice::increment_devops_version = $INCREMENT_DEVOPS_VERSION"
+          echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
+          echo "::notice::cloud_provider = $CLOUD_PROVIDER"
           echo "::notice::first_run = $FIRST_RUN"
         shell: bash
 
