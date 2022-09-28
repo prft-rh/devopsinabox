@@ -52,7 +52,7 @@ jobs:
           echo "FIRST_RUN=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
         id: extract_branch
 
-      - name: Log inputs dev
+      - name: Log inputs deva
         run: |
           echo "::notice::increment_devops_version = ${{ inputs.increment_devops_version }}"
           echo "::notice::increment_catalog_version = ${{ inputs.increment_catalog_version }}"
