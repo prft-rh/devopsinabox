@@ -51,7 +51,7 @@ jobs:
             echo "CLOUD_PROVIDER=$(echo ${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           fi
 
-          if [ -z "${{ inputs.increment_devops_version }}" ]; then
+          if [ -z "${{ inputs }}" ]; then
             echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
           else
             echo "INCREMENT_DEVOPS_VERSION=$(echo ${{ inputs.increment_devops_version }}" >> $GITHUB_ENV
