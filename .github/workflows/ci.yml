@@ -78,8 +78,6 @@ jobs:
           ls
         shell: bash
 
-
-
       - name: Set versions
         id: set_versions
         run: |
