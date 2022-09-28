@@ -56,3 +56,8 @@ jobs:
           echo "::notice::cloud_provider = ${{ inputs.cloud_provider }}"
           echo "::notice::first_run = ${{ inputs.first_run }}"
         shell: bash
+
+      - name: Extract branch name
+        shell: bash
+        run: echo ${GITHUB_REF#refs/heads/}
+        id: extract_branch
