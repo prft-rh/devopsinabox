@@ -1,0 +1,58 @@
+name: DevOpsInABox
+
+on:
+  push:
+    branches:
+    - aws
+    - azure
+  workflow_dispatch:
+    inputs:
+      increment_devops_version:
+        type: choice
+        description: Version increment for devopsinabox
+        required: true
+        default: 'patch'
+        options:
+        - major
+        - minor
+        - patch
+      increment_catalog_version:
+        type: choice
+        description: Version increment for catalog
+        required: true
+        default: 'patch'
+        options:
+        - major
+        - minor
+        - patch
+      cloud_provider:
+        type: choice
+        description: Used for branch and channel targeting
+        required: true
+        default: 'aws'
+        options:
+        - aws
+      first_run:
+        type: choice
+        description: Set to true only if first run
+        required: true
+        default: 'false'
+        options:
+        - true
+        - false
+
+jobs:
+  build_devopsinabox:
+
+    name: Build and Deploy DevOpsInABox
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+
+      - name: Log inputs dev
+        run: |
+          echo "::notice::increment_devops_version = ${{ inputs.increment_devops_version }}"
+          echo "::notice::increment_catalog_version = ${{ inputs.increment_catalog_version }}"
+          echo "::notice::cloud_provider = ${{ inputs.cloud_provider }}"
+          echo "::notice::first_run = ${{ inputs.first_run }}"
+        shell: bash

@@ -1,0 +1,59 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: image-updater
+spec:
+  params:
+    - description: 'The AWS region'
+      name: region
+      type: string
+    - description: Path within the source-repo to update
+      name: file-path
+      type: string
+    - description: Name of the git repo that is being updated
+      name: repo
+      type: string
+    - description: 'Image URL to populate file with e.g. myorg/my-image:c2b4eff'
+      name: new-image-url
+      type: string
+    - default: main
+      description: Branch to fetch for updating
+      name: target-branch
+      type: string
+    - description: >
+        Prefix for naming automatically generated branch, if empty, this will
+        update source-branch
+      name: branch-generate-name
+      type: string
+    - description: >
+        JSON path within the file-path to update e.g.
+        spec.template.spec.containers.0.image
+      name: update-key
+      type: string
+  steps:
+    - script: |
+        update -g $(params.region) -f $(params.file-path) -t $(params.target-branch) -i $(params.new-image-url) -r $(params.repo) -p $(params.branch-generate-name)- -h $(params.update-key)
+      env:
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretAccessKey
+              name: {{ include "devops-in-a-box-namespace.fullname" . }}-aws-secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: accessKeyId
+              name: {{ include "devops-in-a-box-namespace.fullname" . }}-aws-secret
+        - name: GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: {{ include "devops-in-a-box-namespace.fullname" . }}-git-auth
+        - name: GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: {{ include "devops-in-a-box-namespace.fullname" . }}-git-auth
+      image: 'quay.io/mrethers/codecommit-image-updater:latest'
+      name: update-image
+      resources: {}

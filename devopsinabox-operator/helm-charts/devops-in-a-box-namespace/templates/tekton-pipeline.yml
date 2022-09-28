@@ -1,0 +1,154 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "devops-in-a-box-namespace.fullname" . }}
+spec:
+  params:
+    # name of the app
+    - default: 'myApp'
+      name: APP_NAME
+      type: string
+    # git repo with app source code
+    - default: 'https://github.com/myorg/myrepo'
+      name: APP_REPO
+      type: string
+    # git repo containing base dockerfile
+    - default: 'https://github.com/myorg/myrepo'
+      name: DOCKERFILE_REPO
+      type: string
+    # container repo
+    - default: 'quay.io/myorg/myrepo'
+      name: IMAGE_REPO
+      type: string
+    # namespace git repo for gitops
+    - default: 'myorg/mykubeconfigrepo'
+      name: CONFIG_REPO
+      type: string
+    # namespace git repo branch for gitops - staging env
+    - default: master
+      name: GIT_REVISION
+      type: string
+    # namespace git repo branch for gitops - prod env
+    - default: master
+      name: STAGE_CONFIG_BRANCH
+      type: string
+    - default: prod
+      name: PROD_CONFIG_BRANCH
+      type: string
+    # AWS region
+    - default: 'us-east-1'
+      name: REGION
+      type: string
+    # the name of the field holding the container image in the CRD (Spring Boot/NodeJS/etc)
+    - default: "spec.container.image"
+      name: IMAGE_FIELD_NAME
+      type: string
+  tasks:
+    - name: fetch-repository
+      params:
+        - name: url
+          value: $(params.APP_REPO)
+        - name: revision
+          value: $(params.GIT_REVISION)
+        - name: subdirectory
+          value: ''
+        - name: deleteExisting
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+    - name: fetch-dockerfile
+      params:
+        - name: url
+          value: $(params.DOCKERFILE_REPO)
+        - name: subdirectory
+          value: 'docker'
+        - name: deleteExisting
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone      
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: output
+          workspace: workspace
+    - name: maven-package
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      runAfter:
+        - fetch-dockerfile
+      params:
+        - name: GOALS
+          value:
+            - '-DskipTests'
+            - 'clean'
+            - 'package'
+      workspaces:
+        - name: maven-settings
+          workspace: maven-settings
+        - name: source
+          workspace: workspace
+    - name: build-container-image
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter:
+        - maven-package
+      params:
+        - name: IMAGE
+          value: '$(params.IMAGE_REPO):$(params.GIT_REVISION)'
+        - name: DOCKERFILE
+          value: docker/Dockerfile
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: update-stage-deployment-image
+      params:
+        - name: region
+          value: $(params.REGION)
+        - name: file-path
+          value: $(params.APP_NAME).yaml
+        - name: new-image-url
+          value: '$(params.IMAGE_REPO):$(params.GIT_REVISION)'
+        - name: target-branch
+          value: $(params.STAGE_CONFIG_BRANCH)
+        - name: repo
+          value: $(params.CONFIG_REPO)
+        - name: update-key
+          value: $(params.IMAGE_FIELD_NAME)
+        - name: branch-generate-name
+          value: 'dev-release-'
+      runAfter:
+        - build-container-image
+      taskRef:
+        kind: Task
+        name: image-updater
+    - name: update-prod-deployment-image
+      params:
+        - name: region
+          value: $(params.REGION)
+        - name: file-path
+          value: $(params.APP_NAME).yaml
+        - name: new-image-url
+          value: '$(params.IMAGE_REPO):$(params.GIT_REVISION)'
+        - name: target-branch
+          value: $(params.PROD_CONFIG_BRANCH)
+        - name: repo
+          value: $(params.CONFIG_REPO)
+        - name: update-key
+          value: $(params.IMAGE_FIELD_NAME)
+        - name: branch-generate-name
+          value: 'prod-release-'
+      runAfter:
+        - build-container-image
+      taskRef:
+        kind: Task
+        name: image-updater
+  workspaces:
+    - name: workspace
+    - name: maven-settings

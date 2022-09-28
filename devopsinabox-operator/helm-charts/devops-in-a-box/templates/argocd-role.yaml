@@ -1,0 +1,34 @@
+{{- if .Values.gitops }}
+{{- if .Values.gitops.install }}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "devops-in-a-box.fullname" . }}-argocd
+rules:
+- verbs:
+  - '*'
+  apiGroups:
+  - apimc.com.perficient
+  resources:
+  - springbootapps
+- verbs:
+  - '*'
+  apiGroups:
+  - apimc.com.perficient
+  resources:
+  - managednamespaces
+- verbs:
+  - '*'
+  apiGroups:
+  - apimc.com.perficient
+  resources:
+  - managednamespaces
+- verbs:
+  - '*'
+  apiGroups:
+  - ''
+  resources:
+  - configmaps
+  - secrets
+{{- end }}
+{{- end }}

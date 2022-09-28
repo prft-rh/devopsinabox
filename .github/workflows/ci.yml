@@ -55,31 +55,7 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          path: scripts
-
-      - uses: actions/checkout@v3
-        with:
-          repository: prft-rh/devopsinabox-operator
           ref: ${{ inputs.cloud_provider }}
-          path: devopsinabox-operator
-
-      - uses: actions/checkout@v3
-        with:
-          repository: prft-rh/devopsinabox-helm-chart
-          ref: ${{ inputs.cloud_provider }}
-          path: devopsinabox-helm-chart
-
-      - uses: actions/checkout@v3
-        with:
-          repository: prft-rh/devopsinabox-namespace-helm-chart
-          ref: ${{ inputs.cloud_provider }}
-          path: devopsinabox-namespace-helm-chart
-
-      - uses: actions/checkout@v3
-        with:
-          repository: prft-rh/spring-boot-app-helm-chart
-          ref: ${{ inputs.cloud_provider }}
-          path: spring-boot-app-helm-chart
 
       - name: Set versions
         id: set_versions
@@ -139,7 +115,7 @@ jobs:
           rm opm-linux.tar.gz
         shell: bash
 
-      - name: Confirm current versions
+      - name: Log current versions
         run: |
           echo "::notice::yq version"
           yq --version
@@ -184,7 +160,7 @@ jobs:
             exit 1
           fi
 
-          helm template devopsinabox-operator/src/dotnet-app-helm-chart --dry-run > /dev/null
+          helm template dotnet-app-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]
           then
             echo "::notice::Helm template dotnet-app-helm-chart compiled successfully."
@@ -211,7 +187,7 @@ jobs:
           operator-sdk init --plugins=helm --domain=com.perficient --group=apimc --version=v1alpha1 --kind=DevSecOpsManager --helm-chart=../devopsinabox-helm-chart
           operator-sdk create api --group=apimc --version=v1alpha1 --kind=ManagedNamespace --helm-chart=../devopsinabox-namespace-helm-chart
           operator-sdk create api --group=apimc --version=v1alpha1 --kind=SpringBootApp --helm-chart=../spring-boot-app-helm-chart
-          operator-sdk create api --group=apimc --version=v1alpha1 --kind=DotNetApp --helm-chart=../devopsinabox-operator/src/dotnet-app-helm-chart
+          operator-sdk create api --group=apimc --version=v1alpha1 --kind=DotNetApp --helm-chart=../dotnet-app-helm-chart
 
           rm -Rf ../devopsinabox-operator/helm-charts
 

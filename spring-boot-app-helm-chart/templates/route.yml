@@ -1,0 +1,21 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ include "spring-boot.fullname" . }}
+  labels:
+    {{- include "spring-boot.labels" . | nindent 4 }}
+  annotations:
+    {{- include "spring-boot.annotations" . | nindent 4 }}
+    haproxy.router.openshift.io/disable_cookies: 'true'
+spec:
+  to:
+    kind: Service
+    name: {{ include "spring-boot.fullname" . }}
+    weight: 100
+  host: ""
+  port:
+    targetPort: http-service
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: ""
