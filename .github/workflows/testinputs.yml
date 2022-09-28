@@ -55,9 +55,9 @@ jobs:
           fi
 
           if [ -z "${{ inputs.increment_devops_version }}" ]; then
-            echo "inputs!"
-          else
             echo "no inputs!"
+          else
+            echo "inputs!"
           fi
         shell: bash
 
