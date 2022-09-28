@@ -25,13 +25,6 @@ on:
         - major
         - minor
         - patch
-      cloud_provider:
-        type: choice
-        description: Used for branch and channel targeting
-        required: true
-        default: 'aws'
-        options:
-        - aws
       first_run:
         type: choice
         description: Set to true only if first run
@@ -49,15 +42,20 @@ jobs:
     timeout-minutes: 2
     steps:
 
-      - name: Log inputs dev
+      - name: Extract branch name
+        shell: bash
+        run: |
+          if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
+            echo "::error::Branch must be 'aws' or 'azure'"
+            exit 1
+          fi
+          echo "FIRST_RUN=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        id: extract_branch
+
+      - name: Log inputs deva
         run: |
           echo "::notice::increment_devops_version = ${{ inputs.increment_devops_version }}"
           echo "::notice::increment_catalog_version = ${{ inputs.increment_catalog_version }}"
-          echo "::notice::cloud_provider = ${{ inputs.cloud_provider }}"
-          echo "::notice::first_run = ${{ inputs.first_run }}"
+          echo "::notice::first_run = $FIRST_RUN"
         shell: bash
 
-      - name: Extract branch name
-        shell: bash
-        run: echo ${GITHUB_REF#refs/heads/}
-        id: extract_branch
