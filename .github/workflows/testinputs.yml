@@ -27,7 +27,7 @@ on:
         - patch
       cloud_provider:
         type: choice
-        description: Used for branch and channel targeting
+        description: Used for branch and channel targeting temp
         required: true
         default: 'aws'
         options:
