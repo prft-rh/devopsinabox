@@ -51,7 +51,7 @@ jobs:
             echo ${GITHUB_REF#refs/heads/}
             XX=${GITHUB_REF#refs/heads/}
             echo $XX
-            echo "CLOUD_PROVIDER=$(echo $XX)" >> $GITHUB_ENV
+            echo "CLOUD_PROVIDER=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
           fi
           
 
