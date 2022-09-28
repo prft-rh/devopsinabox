@@ -66,16 +66,19 @@ jobs:
           fi
         shell: bash
 
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
       - name: Log inputs
         run: |
           echo "::notice::increment_devops_version = $INCREMENT_DEVOPS_VERSION"
           echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
           echo "::notice::branch = $BRANCH"
           echo "::notice::first_run = $FIRST_RUN"
+          echo ls
         shell: bash
 
-      - name: Checkout branch
-        uses: actions/checkout@v3
+
 
       - name: Set versions
         id: set_versions
