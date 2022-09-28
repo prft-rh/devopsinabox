@@ -75,7 +75,7 @@ jobs:
           echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
           echo "::notice::branch = $BRANCH"
           echo "::notice::first_run = $FIRST_RUN"
-          echo ls
+          ls
         shell: bash
 
 
@@ -155,14 +155,6 @@ jobs:
 
       - name: Helm Check
         run: |
-          helm template devopsinabox-helm-chart --dry-run > /dev/null
-          if [ $? -eq 0 ]
-          then
-            echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
-          else
-            echo "::error::Helm template devopsinabox-helm-chart failed to compile."
-            exit 1
-          fi
 
           helm template devopsinabox-namespace-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]
@@ -170,6 +162,15 @@ jobs:
             echo "::notice::Helm template devopsinabox-namespace-helm-chart compiled successfully."
           else
             echo "::error::Helm template devopsinabox-namespace-helm-chart failed to compile."
+            exit 1
+          fi
+
+          helm template devopsinabox-helm-chart --dry-run > /dev/null
+          if [ $? -eq 0 ]
+          then
+            echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
+          else
+            echo "::error::Helm template devopsinabox-helm-chart failed to compile."
             exit 1
           fi
 
