@@ -89,7 +89,7 @@ jobs:
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]
           then
-            TAG_VERSION="v0.0.0"
+            TAG_VERSION="v0.0.0-$CHANNEL"
           fi
           echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
@@ -234,8 +234,13 @@ jobs:
           EOF
 
           export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
-          export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION
-          export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION
+          export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION-$CHANNEL
+          export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION-$CHANNEL
+
+          echo "old version: $OLD_VERSION"
+          echo "version: $VERSION"
+          echo "img: $IMG"
+          echo "bundle img: $BUNDLE_IMG"
 
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
@@ -248,7 +253,7 @@ jobs:
           else
             yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           fi
-          NAME=devopsinabox.v$VERSION
+          NAME=devopsinabox.v$VERSION-$CHANNEL
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
 
           make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
