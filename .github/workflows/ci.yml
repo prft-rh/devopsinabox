@@ -30,7 +30,7 @@ on:
         - aws
       first_run:
         type: choice
-        description: Whether it is a first run
+        description: Set to true only if first run
         required: true
         default: 'false'
         options:
