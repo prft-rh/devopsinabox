@@ -81,7 +81,7 @@ jobs:
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
-            FOUND=false
+            export FOUND=false
             echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
               if [[ $TAG_NAME == *-$BRANCH ]]
               then
