@@ -48,12 +48,13 @@ jobs:
 
       - name: Set inputs
         run: |
-          if [ {GITHUB_REF#refs/heads/} == "main" ]; then
+          if [ ${GITHUB_REF#refs/heads/} == "main" ]; then
             echo "BRANCH=$(echo ${{ inputs.pull_branch }})" >> $GITHUB_ENV
-          elif [ {GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
+          elif [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
             echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
           else
             echo "::error::Branch is not set to 'aws' or 'azure'"
+            echo "::error::github_ref = ${GITHUB_REF#refs/heads/}"
             exit 1
           fi
 
