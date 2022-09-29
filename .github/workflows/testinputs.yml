@@ -76,8 +76,9 @@ jobs:
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
-          if [ "$TAG_ARRAY" = "null" ]
+          if [ ${#TAG_ARRAY[@]} -eq 0 ]
           then
+            echo "EMPTY!"
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
@@ -98,7 +99,7 @@ jobs:
       - name: Log variables
         run: |
           echo "::notice::OLD_VERSION = $OLD_VERSION"
-          
+
           if [ -z "$OLD_VERSION" ]
           then
             echo "::error::Tag for $BRANCH not found.  Run manually."
