@@ -16,7 +16,6 @@ spec:
     registry: ""
   dockerfile:
     repo: https://github.com/prft-rh/dockerfile-java11.git
-  env: {}
   fullnameOverride: ""
   git:
     branch: master
@@ -31,14 +30,15 @@ spec:
   replicaCount: 1
   resources:
     limits:
-      cpu: 1
+      cpu: 300m
       memory: 600Mi
     requests:
-      cpu: 500m
+      cpu: 100m
       memory: 400Mi
   service:
     port: 8080
   serviceAccount:
+    annotations: {}
     name: null
   version:
     branch: ""

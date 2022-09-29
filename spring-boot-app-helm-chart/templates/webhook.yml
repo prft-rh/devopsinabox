@@ -8,14 +8,16 @@ spec:
   - interceptors:
     - cel:
         filter: >-
-          (header.match('X-GitHub-Event', 'push') &&
-          body.ref.startsWith('refs/heads/{{ .Values.git.branch }}'))
+          (body.eventType == 'git.push' &&
+          body.resource.refUpdates[0].name.startsWith('refs/heads/{{ .Values.git.branch }}'))
     bindings:
     - ref: devopsinabox-github
     - name: app-name
       value: {{ include "spring-boot.fullname" . }}
     - name: image-repo
       value: {{ .Values.container.registry }}
+    - name: dockerfile-repo
+      value: {{ .Values.dockerfile.repo }}
     - name: config-repo
       value: {{ .Values.config.repo }}
     - name: workspace
@@ -29,8 +31,8 @@ spec:
   - interceptors:
     - cel:
         filter: >-
-          (header.match('X-GitHub-Event', 'push') &&
-          body.ref.startsWith('refs/heads/{{ .Values.version.branch }}'))
+          (body.match('eventType', 'git.push') &&
+          body.refUpdates.startsWith('refs/heads/{{ .Values.version.branch }}'))
     bindings:
     - ref: devopsinabox-github
       - name: app-name

@@ -55,6 +55,34 @@ rules:
 - verbs:
   - "*"
   apiGroups:
+  - "integreatly.org"
+  resources:
+  - "grafanadashboards"
+  - "grafanadatasources"
+  - "grafanas"
+- verbs:
+  - "*"
+  apiGroups:
+  - "kibana.k8s.elastic.co"
+  resources:
+  - "kibanas"
+- verbs:
+  - "*"
+  apiGroups:
+  - "route.openshift.io"
+  resources:
+  - "routes"
+- verbs:
+  - "*"
+  apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  - "secrets"
+  - "services"
+- verbs:
+  - "*"
+  apiGroups:
   - "apps"
   resources:
   - "statefulsets"
@@ -71,46 +99,6 @@ rules:
   - "elasticsearch.k8s.elastic.co"
   resources:
   - "elasticsearches"
-- verbs:
-  - "*"
-  apiGroups:
-  - "kibana.k8s.elastic.co"
-  resources:
-  - "kibanas"
-- verbs:
-  - "*"
-  apiGroups:
-  - "apimc.com.perficient"
-  resources:
-  - "springbootapps"
-- verbs:
-  - "*"
-  apiGroups:
-  - ""
-  resources:
-  - "configmaps"
-  - "secrets"
-  - "services"
-- verbs:
-  - "*"
-  apiGroups:
-  - "logging.openshift.io"
-  resources:
-  - "clusterlogforwarders"
-- verbs:
-  - "*"
-  apiGroups:
-  - "integreatly.org"
-  resources:
-  - "grafanadashboards"
-  - "grafanadatasources"
-  - "grafanas"
-- verbs:
-  - "*"
-  apiGroups:
-  - "route.openshift.io"
-  resources:
-  - "routes"
 
 ##
 ## Rules for apimc.com.perficient/v1alpha1, Kind: ManagedNamespace
@@ -132,9 +120,9 @@ rules:
 - verbs:
   - "*"
   apiGroups:
-  - "batch"
+  - "rbac.authorization.k8s.io"
   resources:
-  - "cronjobs"
+  - "rolebindings"
 - verbs:
   - "*"
   apiGroups:
@@ -169,13 +157,6 @@ rules:
   resources:
   - "secrets"
   - "serviceaccounts"
-- verbs:
-  - "*"
-  apiGroups:
-  - "rbac.authorization.k8s.io"
-  resources:
-  - "rolebindings"
-  - "roles"
 
 ##
 ## Rules for apimc.com.perficient/v1alpha1, Kind: SpringBootApp
@@ -197,6 +178,13 @@ rules:
 - verbs:
   - "*"
   apiGroups:
+  - ""
+  resources:
+  - "persistentvolumeclaims"
+  - "services"
+- verbs:
+  - "*"
+  apiGroups:
   - "apps.openshift.io"
   resources:
   - "deploymentconfigs"
@@ -212,54 +200,5 @@ rules:
   - "route.openshift.io"
   resources:
   - "routes"
-- verbs:
-  - "*"
-  apiGroups:
-  - ""
-  resources:
-  - "persistentvolumeclaims"
-  - "services"
 
-##
-## Rules for apimc.com.perficient/v1alpha1, Kind: DotNetApp
-##
-- apiGroups:
-  - apimc.com.perficient
-  resources:
-  - dotnetapps
-  - dotnetapps/status
-  - dotnetapps/finalizers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- verbs:
-  - "*"
-  apiGroups:
-  - ""
-  resources:
-  - "services"
-- verbs:
-  - "*"
-  apiGroups:
-  - "apps"
-  resources:
-  - "deployments"
-- verbs:
-  - "*"
-  apiGroups:
-  - "route.openshift.io"
-  resources:
-  - "routes"
-
-#+kubebuilder:scaffold:rules
-- verbs:
-  - "*"
-  apiGroups:
-  - "batch"
-  resources:
-  - "jobs"
+# +kubebuilder:scaffold:rules

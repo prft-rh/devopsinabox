@@ -12,7 +12,7 @@ spec:
     - default: 'https://github.com/myorg/myrepo'
       name: APP_REPO
       type: string
-    # git repo containing base dockerfile
+    # git repo with dockerfile
     - default: 'https://github.com/myorg/myrepo'
       name: DOCKERFILE_REPO
       type: string
@@ -35,9 +35,13 @@ spec:
     - default: prod
       name: PROD_CONFIG_BRANCH
       type: string
-    # AWS region
-    - default: 'us-east-1'
-      name: REGION
+    # organization name (ADO)
+    - default: 'myOrg'
+      name: ORG
+      type: string
+    # project name (ADO)
+    - default: 'myProject'
+      name: PROJECT
       type: string
     # the name of the field holding the container image in the CRD (Spring Boot/NodeJS/etc)
     - default: "spec.container.image"
@@ -89,8 +93,10 @@ spec:
             - 'clean'
             - 'package'
       workspaces:
+{{- if .Values.maven.settings }}
         - name: maven-settings
           workspace: maven-settings
+{{- end }}
         - name: source
           workspace: workspace
     - name: build-container-image
@@ -109,13 +115,15 @@ spec:
           workspace: workspace
     - name: update-stage-deployment-image
       params:
-        - name: region
-          value: $(params.REGION)
+        - name: org
+          value: $(params.ORG)
+        - name: project
+          value: $(params.PROJECT)
         - name: file-path
           value: $(params.APP_NAME).yaml
         - name: new-image-url
           value: '$(params.IMAGE_REPO):$(params.GIT_REVISION)'
-        - name: target-branch
+        - name: source-branch
           value: $(params.STAGE_CONFIG_BRANCH)
         - name: repo
           value: $(params.CONFIG_REPO)
@@ -130,20 +138,22 @@ spec:
         name: image-updater
     - name: update-prod-deployment-image
       params:
-        - name: region
-          value: $(params.REGION)
+        - name: org
+          value: $(params.ORG)
+        - name: project
+          value: $(params.PROJECT)
         - name: file-path
           value: $(params.APP_NAME).yaml
         - name: new-image-url
           value: '$(params.IMAGE_REPO):$(params.GIT_REVISION)'
-        - name: target-branch
+        - name: source-branch
           value: $(params.PROD_CONFIG_BRANCH)
         - name: repo
           value: $(params.CONFIG_REPO)
         - name: update-key
           value: $(params.IMAGE_FIELD_NAME)
         - name: branch-generate-name
-          value: 'prod-release-'
+          value: 'image-promotion-'
       runAfter:
         - build-container-image
       taskRef:

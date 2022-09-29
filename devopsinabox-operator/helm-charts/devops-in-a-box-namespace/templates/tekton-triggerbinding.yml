@@ -4,5 +4,7 @@ metadata:
   name: devopsinabox-github
 spec:
   params:
+  - name: git-repo-url
+    value: $(body.resource.repository.remoteUrl)
   - name: git-revision
-    value: $(body.head_commit.id)
+    value: $(body.resource.refUpdates[0].newObjectId)

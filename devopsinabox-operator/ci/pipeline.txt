@@ -7,22 +7,22 @@ git clone git@github.com:prft-rh/devopsinabox-namespace-helm-chart.git
 
 # switch to correct branch
 cd devopsinabox-namespace-helm-chart
-git checkout aws
+git checkout azure-devops
 cd ..
 
 cd spring-boot-app-helm-chart
-git checkout aws
+git checkout azure-devops
 cd ..
 
 cd devopsinabox-helm-chart
-git checkout aws
+git checkout azure-devops
 cd ..
 
 # clone the operator itself
 git clone git@github.com:prft-rh/devopsinabox-operator.git	
 
 cd devopsinabox-operator
-git checkout aws
+git checkout azure-devops
 cd ..
 
 # generate the new operator files
@@ -31,7 +31,6 @@ cd devopsinabox
 operator-sdk init --plugins=helm --domain=com.perficient --group=apimc --version=v1alpha1 --kind=DevSecOpsManager --helm-chart=../devopsinabox-helm-chart
 operator-sdk create api --group=apimc --version=v1alpha1 --kind=ManagedNamespace --helm-chart=../devopsinabox-namespace-helm-chart
 operator-sdk create api --group=apimc --version=v1alpha1 --kind=SpringBootApp --helm-chart=../spring-boot-app-helm-chart
-operator-sdk create api --group=apimc --version=v1alpha1 --kind=DotNetApp --helm-chart=../devopsinabox-operator/src/dotnet-app-helm-chart
 
 # cleanup helm-charts
 rm -Rf ../devopsinabox-operator/helm-charts
@@ -46,18 +45,9 @@ patches:
   - path: manager-memory.yaml
 EOF
 
-cat <<EOF >> config/rbac/role.yaml
-- verbs:
-  - "*"
-  apiGroups:
-  - "batch"
-  resources:
-  - "jobs"
-EOF
-
 # update operator controller image
-export VERSION=0.0.30-aws
-export REPLACES=0.0.29-aws # the NAME of the CSV
+export VERSION=0.0.34-ado
+export REPLACES=0.0.33-ado # the NAME of the CSV
 export IMG=quay.io/mrethers/devopsinabox-operator:v$VERSION
 
 # generate bundle
@@ -78,7 +68,7 @@ sed -i "s/createdAt:.*$/createdAt: $(date +'%Y-%m-%d %H:%M:%SZ')/g" config/manif
 sed -i 's/env PATH=$(PATH)/env PATH="\\"$(PATH)\\""/g' Makefile
 
 # TODO set the replaces field in the CSV base
-make bundle CHANNELS=aws DEFAULT_CHANNEL=aws
+make bundle CHANNELS=alpha,ado DEFAULT_CHANNEL=alpha
 
 ## commit changes
 git add -A
@@ -95,7 +85,7 @@ docker push $BUNDLE_IMG
 
 # update catalog
 export CATALOG_IMAGE=quay.io/mrethers/operators-catalog
-export CATALOG_VERSION=v1.0.99
+export CATALOG_VERSION=v1.0.70
 opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE:latest --tag $CATALOG_IMAGE:$CATALOG_VERSION --build-tool docker --pull-tool docker
 docker tag $CATALOG_IMAGE:$CATALOG_VERSION $CATALOG_IMAGE:latest
 docker push $CATALOG_IMAGE:$CATALOG_VERSION
