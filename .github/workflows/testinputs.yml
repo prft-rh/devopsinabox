@@ -103,7 +103,7 @@ jobs:
 
           if [ -z "$OLD_VERSION" ]
           then
-            echo "::error::Tag for $BRANCH not found.  Run manually."
+            echo "::error::Tag for $BRANCH not found.  Run this manually."
             exit 1
           fi
         shell: bash
