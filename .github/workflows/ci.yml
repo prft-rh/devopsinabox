@@ -21,6 +21,14 @@ on:
         - major
         - minor
         - patch
+      pull_branch:
+        type: choice
+        description: Branch to deploy
+        required: true
+        default: 'aws'
+        options:
+        - aws
+        - azure
       first_run:
         type: choice
         description: Set to true only if first run
@@ -40,11 +48,13 @@ jobs:
 
       - name: Set inputs
         run: |
-          if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
-            echo "::error::Branch must be 'aws' or 'azure'"
-            exit 1
-          else
+          if [ {GITHUB_REF#refs/heads/} == "main" ]; then
+            echo "BRANCH=$(echo ${{ inputs.pull_branch }})" >> $GITHUB_ENV
+          elif [ {GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
             echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+          else
+            echo "::error::Branch is not set to 'aws' or 'azure'"
+            exit 1
           fi
 
           if [ -z "${{ inputs.increment_devops_version }}" ]; then
@@ -70,12 +80,14 @@ jobs:
 
       - name: Checkout branch
         uses: actions/checkout@v3
+        with:
+          ref: $BRANCH
 
       - name: Set versions
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
-          if [ $TAG_ARRAY = "[]" ]; then
+          if [ $TAG_ARRAY = "[]" ] || [[ $FIRST_RUN == true ]]; then
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
@@ -113,7 +125,7 @@ jobs:
 
           if [ -z "$OLD_VERSION" ]
           then
-            echo "::error::Tag for $BRANCH not found.  Run manually."
+            echo "::error::Tag for $BRANCH not found.  Either set first run to true or define a version if it hasn't been run in a long time."
             exit 1
           fi
         shell: bash
