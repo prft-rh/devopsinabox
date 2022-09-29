@@ -48,7 +48,7 @@ jobs:
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
           else
-            echo "CLOUD_PROVIDER=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+            echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
           fi
 
           if [ -z "${{ inputs.increment_devops_version }}" ]; then
@@ -68,20 +68,33 @@ jobs:
           else
             echo "FIRST_RUN=$(echo ${{ inputs.first_run }})" >> $GITHUB_ENV
           fi
+
+          echo "ORGANIZATION=shawn_stout_org" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/checkout@v3
-
-      - name: Log inputs
+      - name: Set versions
         run: |
-          echo "::notice::increment_devops_version = $INCREMENT_DEVOPS_VERSION"
-          echo "::notice::increment_catalog_version = $INCREMENT_CATALOG_VERSION"
-          echo "::notice::cloud_provider = $CLOUD_PROVIDER"
-          echo "::notice::first_run = $FIRST_RUN"
-          echo "one"
-          ls
-          cd ..
-          echo "two"
-          ls
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+          if [ "$TAG_ARRAY" = "null" ]
+          then
+            TAG_VERSION="v0.0.0-$BRANCH"
+            echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
+          else
+            echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
+              if [[ $TAG_NAME == *-$BRANCH ]]
+              then
+                echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
+                FOUND=true
+                break
+              fi
+            done
+          fi
         shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
 
+      - name: Log variables
+        run: |
+          echo "::notice::OLD_VERSION = $OLD_VERSION"
+        shell: bash
