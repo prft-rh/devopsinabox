@@ -84,14 +84,11 @@ jobs:
               if [[ $TAG_NAME == *-$BRANCH ]]
               then
                 echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
-                FOUND=true
                 break
               fi
             done
           fi
           
-    
-          echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           if [ "$TAG_VERSION" = "null" ]; then
