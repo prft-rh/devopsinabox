@@ -81,6 +81,7 @@ jobs:
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
+            FOUND=false
             echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
               if [[ $TAG_NAME == *-$BRANCH ]]
               then
@@ -89,7 +90,13 @@ jobs:
                 break
               fi
             done
+            if [ "$FOUND" = "false" ]
+            then
+              echo "::error::Tag for $BRANCH not found.  Run manually."
+              exit 1
+            fi
           fi
+          
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
