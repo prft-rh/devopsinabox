@@ -75,7 +75,7 @@ jobs:
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
-          if (( ${#TAG_ARRAY[@]} )); then
+          if [ $TAG_ARRAY = "[]" ]; then
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
