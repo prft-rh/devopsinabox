@@ -21,13 +21,6 @@ on:
         - major
         - minor
         - patch
-      cloud_provider:
-        type: choice
-        description: Used for branch and channel targeting
-        required: true
-        default: 'aws'
-        options:
-        - aws
       first_run:
         type: choice
         description: Set to true only if first run
@@ -45,39 +38,85 @@ jobs:
     timeout-minutes: 4
     steps:
 
-      - name: Log inputs
+      - name: Set inputs
         run: |
-          echo "::notice::increment_devops_version = ${{ inputs.increment_devops_version }}"
-          echo "::notice::increment_catalog_version = ${{ inputs.increment_catalog_version }}"
-          echo "::notice::cloud_provider = ${{ inputs.cloud_provider }}"
-          echo "::notice::first_run = ${{ inputs.first_run }}"
+          if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
+            echo "::error::Branch must be 'aws' or 'azure'"
+            exit 1
+          else
+            echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.increment_devops_version }}" ]; then
+            echo "INCREMENT_DEVOPS_VERSION=patch" >> $GITHUB_ENV
+          else
+            echo "INCREMENT_DEVOPS_VERSION=$(echo ${{ inputs.increment_devops_version }})" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.increment_catalog_version }}" ]; then
+            echo "INCREMENT_CATALOG_VERSION=patch" >> $GITHUB_ENV
+          else
+            echo "INCREMENT_CATALOG_VERSION=$(echo ${{ inputs.increment_catalog_version }})" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.first_run }}" ]; then
+            echo "FIRST_RUN=false" >> $GITHUB_ENV
+          else
+            echo "FIRST_RUN=$(echo ${{ inputs.first_run }})" >> $GITHUB_ENV
+          fi
+
+          echo "ORGANIZATION=shawn_stout_org" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.cloud_provider }}
+      - name: Checkout branch
+        uses: actions/checkout@v3
 
       - name: Set versions
-        id: set_versions
         run: |
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
-          TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
-          if [ "$TAG_VERSION" = "null" ]
-          then
-            TAG_VERSION="v0.0.0"
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+          if [ $TAG_ARRAY = "[]" ]; then
+            TAG_VERSION="v0.0.0-$BRANCH"
+            echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
+          else
+            echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
+              if [[ $TAG_NAME == *-$BRANCH ]]
+              then
+                echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
+                break
+              fi
+            done
           fi
-          echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/shawn_stout_org/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
-          if [ "$TAG_VERSION" = "null" ]
-          then
+          if [ "$TAG_VERSION" = "null" ]; then
             TAG_VERSION="v0.0.0"
+            FIRST_CATALOG_RUN=true
+          else
+            FIRST_CATALOG_RUN=false
           fi
           echo "OLD_CATALOG_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
+          echo "FIRST_CATALOG_RUN=$(echo $FIRST_CATALOG_RUN)" >> $GITHUB_ENV
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
-          CHANNEL: ${{ inputs.cloud_provider }}
+
+      - name: Confirm variables
+        run: |
+          echo "::notice::INCREMENT_DEVOPS_VERSION = $INCREMENT_DEVOPS_VERSION"
+          echo "::notice::INCREMENT_CATALOG_VERSION = $INCREMENT_CATALOG_VERSION"
+          echo "::notice::BRANCH = $BRANCH"
+          echo "::notice::FIRST_RUN = $FIRST_RUN"
+          echo "::notice::FIRST_CATALOG_RUN = $FIRST_CATALOG_RUN"
+          echo "::notice::OLD_VERSION = $OLD_VERSION"
+
+          if [ -z "$OLD_VERSION" ]
+          then
+            echo "::error::Tag for $BRANCH not found.  Run manually."
+            exit 1
+          fi
+        shell: bash
 
       - name: Install Operator SDK
         run: |
@@ -208,7 +247,7 @@ jobs:
             - "jobs"
           EOF
 
-          export VERSION=$(../scripts/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)
+          export VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)-$BRANCH
           export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION
           export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION
 
@@ -233,27 +272,24 @@ jobs:
           echo "NAME: $NAME"
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
 
-          make bundle CHANNELS=$CHANNEL DEFAULT_CHANNEL=$CHANNEL
+          make bundle CHANNELS=$BRANCH DEFAULT_CHANNEL=$BRANCH
           make docker-build docker-push
           make bundle-build
           docker push $BUNDLE_IMG
 
-          export CATALOG_VERSION=$(../scripts/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
+          export CATALOG_VERSION=$(../tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
           export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
-          if [[ $FIRST_RUN == false ]]
+          echo $FIRST_CATALOG_RUN
+          if [[ $FIRST_CATALOG_RUN == false ]]
           then
+            echo "additional run"
             opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
           else
+            echo "first run"
             opm index add --bundles $BUNDLE_IMG --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
           fi
           docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_VERSION
         shell: bash
-        env:
-          INCREMENT_DEVOPS_VERSION: ${{ inputs.increment_devops_version }}
-          INCREMENT_CATALOG_VERSION: ${{ inputs.increment_catalog_version }}
-          CHANNEL: ${{ inputs.cloud_provider }}
-          FIRST_RUN: ${{ inputs.first_run }}
-          ORGANIZATION: shawn_stout_org
