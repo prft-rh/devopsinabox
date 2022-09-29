@@ -98,4 +98,10 @@ jobs:
       - name: Log variables
         run: |
           echo "::notice::OLD_VERSION = $OLD_VERSION"
+          
+          if [ -z "$OLD_VERSION" ]
+          then
+            echo "::error::Tag for $BRANCH not found.  Run manually."
+            exit 1
+          fi
         shell: bash

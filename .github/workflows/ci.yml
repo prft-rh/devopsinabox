@@ -106,12 +106,19 @@ jobs:
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
 
-      - name: Log variables
+      - name: Confirm variables
         run: |
           echo "::notice::INCREMENT_DEVOPS_VERSION = $INCREMENT_DEVOPS_VERSION"
           echo "::notice::INCREMENT_CATALOG_VERSION = $INCREMENT_CATALOG_VERSION"
           echo "::notice::BRANCH = $BRANCH"
           echo "::notice::FIRST_CATALOG_RUN = $FIRST_CATALOG_RUN"
+          echo "::notice::OLD_VERSION = $OLD_VERSION"
+
+          if [ -z "$OLD_VERSION" ]
+          then
+            echo "::error::Tag for $BRANCH not found.  Run manually."
+            exit 1
+          fi
         shell: bash
 
       - name: Install Operator SDK
