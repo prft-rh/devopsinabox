@@ -89,7 +89,7 @@ jobs:
                 break
               fi
             done
-            echo $FOUND
+            echo $OLD_VERSION
             if [ -z "$OLD_VERSION" ]
             then
               echo "::error::Tag for $BRANCH not found.  Run manually."
