@@ -81,18 +81,16 @@ jobs:
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
-            export FOUND=false
             echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
               if [[ $TAG_NAME == *-$BRANCH ]]
               then
                 echo "FOUND!"
                 echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
-                export FOUND=true
                 break
               fi
             done
             echo $FOUND
-            if [[ $FOUND == false ]]
+            if [ -z "$OLD_VERSION" ]
             then
               echo "::error::Tag for $BRANCH not found.  Run manually."
               exit 1
