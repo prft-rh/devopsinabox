@@ -91,7 +91,8 @@ jobs:
                 break
               fi
             done
-            if [[ $FOUND = false ]]
+            echo $FOUND
+            if [[ $FOUND == false ]]
             then
               echo "::error::Tag for $BRANCH not found.  Run manually."
               exit 1
