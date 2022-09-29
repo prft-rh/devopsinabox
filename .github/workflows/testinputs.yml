@@ -85,6 +85,7 @@ jobs:
             echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
               if [[ $TAG_NAME == *-$BRANCH ]]
               then
+                echo "FOUND!"
                 echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
                 FOUND=true
                 break
