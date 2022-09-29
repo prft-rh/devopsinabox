@@ -40,7 +40,7 @@ jobs:
 
       - name: Set inputs
         run: |
-          if ! [ ${GITHUB_REF#refs/heads/} == "aws" ] || [ ${GITHUB_REF#refs/heads/} == "azure" ]; then
+          if [ {GITHUB_REF#refs/heads/} != "aws" ] && [ ${GITHUB_REF#refs/heads/} != "azure" ]; then
             echo "::error::Branch must be 'aws' or 'azure'"
             exit 1
           else
@@ -75,7 +75,7 @@ jobs:
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
-          if [ $TAG_ARRAY = "[]" ]; then
+          if [ $TAG_ARRAY = "[]" ] || [[ $FIRST_RUN == true ]]; then
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
@@ -113,7 +113,7 @@ jobs:
 
           if [ -z "$OLD_VERSION" ]
           then
-            echo "::error::Tag for $BRANCH not found.  Run manually."
+            echo "::error::Tag for $BRANCH not found.  Either set first run to true or define a version if it hasn't been run in a long time."
             exit 1
           fi
         shell: bash
