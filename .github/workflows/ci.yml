@@ -1,6 +1,10 @@
 name: DevOpsInABox
 
 on:
+#  push:
+#    branches:
+#    - aws
+#    - azure
   workflow_dispatch:
     inputs:
       increment_devops_version:
