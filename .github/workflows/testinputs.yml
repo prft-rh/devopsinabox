@@ -87,7 +87,7 @@ jobs:
               then
                 echo "FOUND!"
                 echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
-                FOUND=true
+                export FOUND=true
                 break
               fi
             done
