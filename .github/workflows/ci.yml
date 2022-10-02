@@ -306,9 +306,11 @@ jobs:
             export VERSION=$OVERRIDE_VERSION-$BRANCH
           fi
 
+          echo "::notice::VERSION = $VERSION"
           SPECIFIC_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true&specificTag=v'"$VERSION"'' --header 'Authorization: Bearer $TOKEN')
+          echo "::notice::SPECIFIC_DATA = $SPECIFIC_DATA"   
           SPECIFIC_ARRAY=$(echo $SPECIFIC_DATA | jq .tags)
-
+          echo "::notice::SPECIFIC_ARRAY = $SPECIFIC_ARRAY"
           if [ $SPECIFIC_ARRAY != "[]" ]; then
             echo "::error::This version already exists.  Run manually and pick a version higher for this branch."
             exit 1
@@ -336,12 +338,7 @@ jobs:
           make bundle-build
           docker push $BUNDLE_IMG
 
-          echo "::notice::OLD_CATALOG_VERSION = $OLD_CATALOG_VERSION"
-          ls ..
-
           export CATALOG_VERSION=$(../../main/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
-          echo "::notice::CATALOG_VERSION = $CATALOG_VERSION"
-
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
           export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
 
