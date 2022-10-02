@@ -45,8 +45,10 @@ jobs:
     timeout-minutes: 4
     steps:
 
-      - name: Checkout branch
+      - name: Checkout main
         uses: actions/checkout@v3
+        with:
+          path: main
 
       - name: Confirm and set inputs
         run: |
@@ -80,7 +82,7 @@ jobs:
           if [ -z "${{ inputs.override_version }}" ]; then
             echo "OVERRIDE_VERSION=false" >> $GITHUB_ENV
           else
-            VERSION=$(tools/check_version.sh ${{ inputs.override_version }})
+            VERSION=$(main/tools/check_version.sh ${{ inputs.override_version }})
             if [ $VERSION == "error" ]; then
               echo "::error::Version must be in the format X.X.X.  Examples: 0.0.32, 0.5.2, 1.2.45"
               exit -1
@@ -92,6 +94,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v3
         with:
+          path: branch
           ref: ${{ env.BRANCH }}
 
       - name: Check Quay connection
@@ -224,6 +227,7 @@ jobs:
 
       - name: Helm Check
         run: |
+          cd branch
           helm template devopsinabox-helm-chart --dry-run > /dev/null
           if [ $? -eq 0 ]; then
             echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
@@ -268,6 +272,7 @@ jobs:
 
       - name: Generate operator files
         run: |
+          cd branch
           mkdir devopsinabox
           cd devopsinabox
     
@@ -296,7 +301,7 @@ jobs:
           EOF
 
           if [[ $OVERRIDE_VERSION == false ]]; then
-            export VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)-$BRANCH
+            export VERSION=$(../../main/tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)-$BRANCH
           else
             export VERSION=$OVERRIDE_VERSION-$BRANCH
           fi
@@ -325,7 +330,7 @@ jobs:
           echo "::notice::OLD_CATALOG_VERSION = $OLD_CATALOG_VERSION"
           ls ..
 
-          export CATALOG_VERSION=$(../tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
+          export CATALOG_VERSION=$(../../main/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           echo "::notice::CATALOG_VERSION = $CATALOG_VERSION"
 
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
