@@ -6,7 +6,7 @@ major=0
 minor=0
 patch=0
 
-# break down the version number into it's components
+# break down the version number into its components
 regex="([0-9]+).([0-9]+).([0-9]+)"
 if [[ $version =~ $regex ]]; then
   major="${BASH_REMATCH[1]}"

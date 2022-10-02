@@ -88,14 +88,31 @@ jobs:
         with:
           ref: ${{ env.BRANCH }}
 
+      - name: Check Quay connection
+        run: |
+          STATUS=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=1' --header 'Authorization: Bearer $TOKEN' -w '%{http_code}')
+          if [ "$STATUS" -ge "400" ]; then
+            echo "::error::Cannot connect to Quay API.  Status code is $STATUS"
+            exit 1
+          fi
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
       - name: Set versions
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
-          if [ $TAG_ARRAY = "[]" ] || [[ $FIRST_RUN == true ]]; then
+          SPECIFIC_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true&specificTag=v0.0.1-'"$BRANCH"'' --header 'Authorization: Bearer $TOKEN')
+          SPECIFIC_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ $TAG_ARRAY = "[]" ] || [ $SPECIFIC_ARRAY = "[]" ]; then
+            echo "FIRST_RUN=true" >> $GITHUB_ENV
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           else
+            echo "FIRST_RUN=false" >> $GITHUB_ENV
             echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
               if [[ $TAG_NAME == *-$BRANCH ]]
               then
@@ -106,8 +123,9 @@ jobs:
           fi
           
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
-          TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
-          if [ "$TAG_VERSION" = "null" ]; then
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
             TAG_VERSION="v0.0.0"
             FIRST_CATALOG_RUN=true
           elif [ "$TAG_VERSION" = "latest" ]; then
@@ -115,12 +133,15 @@ jobs:
             exit 1
           else
             FIRST_CATALOG_RUN=false
+            TAG_VERSION=$(echo $TAG_DATA | jq .tags | jq '.[0].name' -r)
           fi
+
           echo "OLD_CATALOG_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
           echo "FIRST_CATALOG_RUN=$(echo $FIRST_CATALOG_RUN)" >> $GITHUB_ENV
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
 
       - name: Confirm variables
         run: |
@@ -130,10 +151,17 @@ jobs:
           echo "::notice::FIRST_RUN = $FIRST_RUN"
           echo "::notice::FIRST_CATALOG_RUN = $FIRST_CATALOG_RUN"
           echo "::notice::OLD_VERSION = $OLD_VERSION"
+          echo "::notice::OLD_CATALOG_VERSION = $OLD_CATALOG_VERSION"
 
           if [ -z "$OLD_VERSION" ]
           then
-            echo "::error::Tag for $BRANCH not found.  Either set first run to true or define a version if it hasn't been run in a long time."
+            echo "::error::Tag for $BRANCH not found.  "
+            exit 1
+          fi
+
+          if [ -z "$OLD_CATALOG_VERSION" ]
+          then
+            echo "::error::Catalog not found.  Check Quay API connection."
             exit 1
           fi
         shell: bash
@@ -271,26 +299,20 @@ jobs:
           export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION
           export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION
 
-          echo "old version: $OLD_VERSION"
-          echo "version: $VERSION"
-          echo "img: $IMG"
-          echo "bundle img: $BUNDLE_IMG"
-
           yq -i eval '.spec.version = "'$VERSION'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           yq -i eval '.metadata.annotations.containerImage = "'$IMG'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           DATE="$(date +'%Y-%m-%d %H:%M:%SZ')"
           yq -i eval '.metadata.annotations.createdAt = "'"$DATE"'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          NAME=devopsinabox.v$VERSION
+          yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
+          
           if [[ $FIRST_RUN == false ]]
           then
             REPLACES=devopsinabox.$OLD_VERSION
-            echo "REPLACES: $REPLACES"
             yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           else
             yq -i 'del(.spec.replaces)' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           fi
-          NAME=devopsinabox.v$VERSION
-          echo "NAME: $NAME"
-          yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
 
           make bundle CHANNELS=$BRANCH DEFAULT_CHANNEL=$BRANCH
           make docker-build docker-push
@@ -300,16 +322,17 @@ jobs:
           export CATALOG_VERSION=$(../tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
           export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
-          echo $FIRST_CATALOG_RUN
+
           if [[ $FIRST_CATALOG_RUN == false ]]
           then
-            echo "additional run"
             opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
           else
-            echo "first run"
             opm index add --bundles $BUNDLE_IMG --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
           fi
+
           docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_VERSION
         shell: bash
+        env:
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
