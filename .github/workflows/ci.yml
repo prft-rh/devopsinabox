@@ -120,8 +120,7 @@ jobs:
           else
             echo "FIRST_RUN=false" >> $GITHUB_ENV
             echo "$TAG_ARRAY" | jq -r '.[].name' | while read -r TAG_NAME; do
-              if [[ $TAG_NAME == *-$BRANCH ]]
-              then
+              if [[ $TAG_NAME == *-$BRANCH ]]; then
                 echo "OLD_VERSION=$(echo $TAG_NAME)" >> $GITHUB_ENV
                 break
               fi
@@ -160,14 +159,12 @@ jobs:
           echo "::notice::OLD_CATALOG_VERSION = $OLD_CATALOG_VERSION"
           echo "::notice::OVERRIDE_VERSION = $OVERRIDE_VERSION"
 
-          if [ -z "$OLD_VERSION" ]
-          then
+          if [ -z "$OLD_VERSION" ]; then
             echo "::error::Tag for $BRANCH not found.  Use the manual override to push an incremented version of this branch if"
             exit 1
           fi
 
-          if [ -z "$OLD_CATALOG_VERSION" ]
-          then
+          if [ -z "$OLD_CATALOG_VERSION" ]; then
             echo "::error::Catalog not found.  Check Quay API connection."
             exit 1
           fi
@@ -228,8 +225,7 @@ jobs:
       - name: Helm Check
         run: |
           helm template devopsinabox-helm-chart --dry-run > /dev/null
-          if [ $? -eq 0 ]
-          then
+          if [ $? -eq 0 ]; then
             echo "::notice::Helm template devopsinabox-helm-chart compiled successfully."
           else
             echo "::error::Helm template devopsinabox-helm-chart failed to compile."
@@ -237,8 +233,7 @@ jobs:
           fi
 
           helm template devopsinabox-namespace-helm-chart --dry-run > /dev/null
-          if [ $? -eq 0 ]
-          then
+          if [ $? -eq 0 ]; then
             echo "::notice::Helm template devopsinabox-namespace-helm-chart compiled successfully."
           else
             echo "::error::Helm template devopsinabox-namespace-helm-chart failed to compile."
@@ -246,8 +241,7 @@ jobs:
           fi
 
           helm template spring-boot-app-helm-chart --dry-run > /dev/null
-          if [ $? -eq 0 ]
-          then
+          if [ $? -eq 0 ]; then
             echo "::notice::Helm template spring-boot-app-helm-chart compiled successfully."
           else
             echo "::error::Helm template spring-boot-app-helm-chart failed to compile."
@@ -255,8 +249,7 @@ jobs:
           fi
 
           helm template dotnet-app-helm-chart --dry-run > /dev/null
-          if [ $? -eq 0 ]
-          then
+          if [ $? -eq 0 ]; then
             echo "::notice::Helm template dotnet-app-helm-chart compiled successfully."
           else
             echo "::error::Helm template dotnet-app-helm-chart failed to compile."
@@ -302,7 +295,7 @@ jobs:
             - "jobs"
           EOF
 
-          if [[ $OVERRIDE_VERSION == false ]]
+          if [[ $OVERRIDE_VERSION == false ]]; then
             export VERSION=$(../tools/increment_version.sh $OLD_VERSION $INCREMENT_DEVOPS_VERSION)-$BRANCH
           else
             export VERSION=$OVERRIDE_VERSION-$BRANCH
@@ -317,8 +310,7 @@ jobs:
           NAME=devopsinabox.v$VERSION
           yq -i eval '.metadata.name = "'$NAME'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           
-          if [[ $FIRST_RUN == false ]]
-          then
+          if [[ $FIRST_RUN == false ]]; then
             REPLACES=devopsinabox.$OLD_VERSION
             yq -i eval '.spec.replaces = "'$REPLACES'"' config/manifests/bases/devopsinabox.clusterserviceversion.yaml
           else
@@ -334,8 +326,7 @@ jobs:
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
           export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
 
-          if [[ $FIRST_CATALOG_RUN == false ]]
-          then
+          if [[ $FIRST_CATALOG_RUN == false ]]; then
             opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
           else
             opm index add --bundles $BUNDLE_IMG --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
