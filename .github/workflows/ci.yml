@@ -34,7 +34,7 @@ on:
         - aws
         - azure
       override_version:
-        description: Only use below for a manual override on a version increment.  Input examples - 0.0.32, 0.5.21, 1.32.11
+        description: Manual override on a version for devopsinabox.  Input examples - 0.0.32, 0.5.21, 1.32.11
         required: false
 
 jobs:
@@ -306,7 +306,7 @@ jobs:
             export VERSION=$OVERRIDE_VERSION-$BRANCH
           fi
 
-          SPECIFIC_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true&specificTag='"$VERSION"'' --header 'Authorization: Bearer $TOKEN')
+          SPECIFIC_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true&specificTag=v'"$VERSION"'' --header 'Authorization: Bearer $TOKEN')
           SPECIFIC_ARRAY=$(echo $SPECIFIC_DATA | jq .tags)
 
           if [ $SPECIFIC_ARRAY != "[]" ]; then
