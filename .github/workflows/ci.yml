@@ -136,7 +136,7 @@ jobs:
           if [ "$TAG_ARRAY" = "[]" ]; then
             TAG_VERSION="v0.0.0"
             FIRST_CATALOG_RUN=true
-          elif [ "$TAG_VERSION" = "latest" ]; then
+          elif [ $TAG_VERSION == "latest" ]; then
             echo "::error::'latest' tag pushed out of order.  remove 'latest' tag from operators_catalog and run again."
             exit 1
           else
@@ -305,6 +305,15 @@ jobs:
           else
             export VERSION=$OVERRIDE_VERSION-$BRANCH
           fi
+
+          SPECIFIC_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true&specificTag='"$VERSION"'' --header 'Authorization: Bearer $TOKEN')
+          SPECIFIC_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ $SPECIFIC_ARRAY != "[]" ]; then
+            echo "::error::This version already exists.  Run manually and pick a version higher for this branch."
+            exit 1
+          fi
+
           export IMG=quay.io/$ORGANIZATION/devopsinabox-operator:v$VERSION
           export BUNDLE_IMG=quay.io/$ORGANIZATION/devopsinabox-operator-bundle:v$VERSION
 
