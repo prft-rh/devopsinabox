@@ -148,11 +148,11 @@ jobs:
           echo "::notice::FIRST_CATALOG_RUN = $FIRST_CATALOG_RUN"
           echo "::notice::OLD_VERSION = $OLD_VERSION"
           echo "::notice::OLD_CATALOG_VERSION = $OLD_CATALOG_VERSION"
-          echo "::notice::OVERRIDE_VERSION = $OLD_CATALOG_VERSION"
+          echo "::notice::OVERRIDE_VERSION = $OVERRIDE_VERSION"
 
           if [ -z "$OLD_VERSION" ]
           then
-            echo "::error::Tag for $BRANCH not found.  "
+            echo "::error::Tag for $BRANCH not found.  Use the manual override to push an incremented version of this branch if"
             exit 1
           fi
 
