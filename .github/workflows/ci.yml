@@ -116,7 +116,7 @@ jobs:
           SPECIFIC_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true&specificTag=v0.0.1-'"$BRANCH"'' --header 'Authorization: Bearer $TOKEN')
           SPECIFIC_ARRAY=$(echo $SPECIFIC_DATA | jq .tags)
 
-          if [ $TAG_ARRAY = "[]" ] || [ $SPECIFIC_ARRAY = "[]" ]; then
+          if [ "$TAG_ARRAY" = "[]" ] || [ "$SPECIFIC_ARRAY" = "[]" ]; then
             echo "FIRST_RUN=true" >> $GITHUB_ENV
             TAG_VERSION="v0.0.0-$BRANCH"
             echo "OLD_VERSION=$(echo $TAG_VERSION)" >> $GITHUB_ENV
@@ -311,7 +311,7 @@ jobs:
           echo "::notice::SPECIFIC_DATA = $SPECIFIC_DATA"   
           SPECIFIC_ARRAY=$(echo $SPECIFIC_DATA | jq .tags)
           echo "::notice::SPECIFIC_ARRAY = $SPECIFIC_ARRAY"
-          if [ $SPECIFIC_ARRAY != "[]" ]; then
+          if [ "$SPECIFIC_ARRAY" != "[]" ]; then
             echo "::error::This version already exists.  Run manually and pick a version higher for this branch."
             exit 1
           fi
