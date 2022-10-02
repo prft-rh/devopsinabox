@@ -322,7 +322,12 @@ jobs:
           make bundle-build
           docker push $BUNDLE_IMG
 
+          echo "::notice::OLD_CATALOG_VERSION = $OLD_CATALOG_VERSION"
+          ls ..
+
           export CATALOG_VERSION=$(../tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
+          echo "::notice::CATALOG_VERSION = $CATALOG_VERSION"
+
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
           export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
 
