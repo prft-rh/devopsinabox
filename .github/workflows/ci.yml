@@ -34,7 +34,7 @@ on:
         - aws
         - azure
       ovverride_version:
-        description: Warning!  Only use for a manual override on a version.  Input examples - 0.0.32, 0.5.21, 1.32.11
+        description: Only use below for a manual override on a version increment.  Input examples - 0.0.32, 0.5.21, 1.32.11
         required: false
 
 jobs:
