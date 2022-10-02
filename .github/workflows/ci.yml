@@ -90,7 +90,7 @@ jobs:
 
       - name: Check Quay connection
         run: |
-          STATUS=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=1' --header 'Authorization: Bearer $TOKEN' -w '%{http_code}')
+          STATUS=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=1' --header 'Authorization: Bearer $TOKEN' -s -o /dev/null -w '%{http_code}')
           if [ "$STATUS" -ge "400" ]; then
             echo "::error::Cannot connect to Quay API.  Status code is $STATUS"
             exit 1
