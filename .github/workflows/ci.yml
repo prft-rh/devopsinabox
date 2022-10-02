@@ -312,7 +312,7 @@ jobs:
           SPECIFIC_ARRAY=$(echo $SPECIFIC_DATA | jq .tags)
           echo "::notice::SPECIFIC_ARRAY = $SPECIFIC_ARRAY"
           if [ "$SPECIFIC_ARRAY" != "[]" ]; then
-            echo "::error::This version already exists.  Run manually and pick a version higher for this branch."
+            echo "::error::This version already exists.  If running manually, pick a higher version or let it run automatically."
             exit 1
           fi
 
