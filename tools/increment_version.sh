@@ -25,7 +25,7 @@ elif [[ "$2" == "minor" ]]; then
 elif [[ "$2" == "patch" ]]; then
   patch=$(echo $patch + 1 | bc)
 else
-  echo "usage: ./increment_version.sh version_number [major/minor/patch]"
+  echo "::error::usage: ./increment_version.sh version_number [major/minor/patch]"
   exit -1
 fi
 
