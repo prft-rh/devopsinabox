@@ -55,7 +55,7 @@ jobs:
           echo "::notice::INCREMENT_DEVOPS_VERSION = ${{ inputs.increment_devops_version }}"
           echo "::notice::INCREMENT_CATALOG_VERSION = ${{ inputs.increment_catalog_version }}"
           echo "::notice::BRANCH = ${{ inputs.pull_branch }}"
-          echo "::notice::BRANCH = ${{ inputs.override_version }}"
+          echo "::notice::OVERRIDE_VERSION = ${{ inputs.override_version }}"
 
           if [ ${GITHUB_REF#refs/heads/} == "main" ]; then
             echo "BRANCH=$(echo ${{ inputs.pull_branch }})" >> $GITHUB_ENV
