@@ -79,7 +79,7 @@ jobs:
             echo "INCREMENT_CATALOG_VERSION=$(echo ${{ inputs.increment_catalog_version }})" >> $GITHUB_ENV
           fi
 
-          if [ ${{ inputs.override_version }} == "" ]; then
+          if [ -z "${{ inputs.override_version }}" ]; then
             echo "OVERRIDE_VERSION=false" >> $GITHUB_ENV
           else
             VERSION=$(tools/check_version.sh ${{ inputs.override_version }})
