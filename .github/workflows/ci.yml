@@ -45,6 +45,9 @@ jobs:
     timeout-minutes: 4
     steps:
 
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
       - name: Confirm and set inputs
         run: |
           echo "::notice::INCREMENT_DEVOPS_VERSION = ${{ inputs.increment_devops_version }}"
@@ -73,15 +76,7 @@ jobs:
           else
             echo "INCREMENT_CATALOG_VERSION=$(echo ${{ inputs.increment_catalog_version }})" >> $GITHUB_ENV
           fi
-        shell: bash
 
-      - name: Checkout branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.BRANCH }}
-
-      - name: Set override version
-        run: |
           if [ -z "${{ inputs.override_version }}" ]; then
             echo "OVERRIDE_VERSION=false" >> $GITHUB_ENV
           else
@@ -93,6 +88,11 @@ jobs:
             echo "OVERRIDE_VERSION=$(echo $VERSION)" >> $GITHUB_ENV
           fi
         shell: bash
+
+      - name: Checkout branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BRANCH }}
 
       - name: Check Quay connection
         run: |
