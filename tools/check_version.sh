@@ -12,10 +12,9 @@ if [[ $version =~ $regex ]]; then
   major="${BASH_REMATCH[1]}"
   minor="${BASH_REMATCH[2]}"
   patch="${BASH_REMATCH[3]}"
-else
-  echo "::error::Version must be in the format X.X.X.  Examples: 0.0.32, 0.5.2, 1.2.45"
-  exit -1
-fi
 
-# return checked version number
-echo "${major}.${minor}.${patch}"
+  # return checked version number
+  echo "${major}.${minor}.${patch}"
+else
+  echo "error"
+fi

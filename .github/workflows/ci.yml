@@ -78,6 +78,10 @@ jobs:
             echo "OVERRIDE_VERSION=false" >> $GITHUB_ENV
           else
             VERSION=$(tools/check_version.sh ${{ inputs.ovverride_version }})
+            if [ $VERSION == "error" ]; then
+              echo "::error::Version must be in the format X.X.X.  Examples: 0.0.32, 0.5.2, 1.2.45"
+              exit -1
+            fi
             echo "OVERRIDE_VERSION=$(echo $VERSION)" >> $GITHUB_ENV
           fi
 
