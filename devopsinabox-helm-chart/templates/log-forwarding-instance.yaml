@@ -1,27 +1,30 @@
 {{- $fullName := include "devops-in-a-box.fullname" . -}}
-{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: logging.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
-  name: instance
+  name: {{ $fullName }}
   namespace: openshift-logging
   labels:
     app.kubernetes.io/component: cluster-logging
 {{ include "devops-in-a-box.labels" . | indent 4 }}
 spec:
-  outputs:
-    - url: "tls://{{ $fullName }}.{{ .Release.Namespace }}.svc:{{ $.Values.forwarding.fluentd.port }}"
-      name: {{ $fullName }}
-      type: fluentdForward
-      secret:
-        name: {{ $fullName }}
+  inputs: 
+    - name: springBootLogs
+      application:
+        selector:
+          matchLabels:
+            perficient_com/runtime: spring-boot
+  outputDefaults:
+    elasticsearch:
+      structuredTypeKey: kubernetes.container_name
   pipelines:
     - inputRefs:
-        - application
-      name: container-logs
+        - springBootLogs
+      name: spring-boot-logs
       outputRefs:
-      {{- if or .Values.forwarding.preserveDefault }}
         - default
-      {{- end }}
-        - {{ $fullName }}
-{{- end }}
+      parse: json
+    - inputRefs:
+        - application
+      outputRefs:
+        - default

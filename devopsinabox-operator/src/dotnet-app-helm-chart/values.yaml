@@ -33,38 +33,54 @@ fullnameOverride: ""
 
 serviceAccount:
   name:
+  annotations: {}
 
 podAnnotations: {}
 
-# default Spring Boot port, override to reflect server.port config
+# default NET port, override to reflect server.port config
 service:
   port: 8080
   
 management:
   port: 8081
-  
-env: {}
-  #- name:
-  #  value:
-  #- name:
-  #  value:
-  # ...
-  
+
+#resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 resources:
   limits:
-    cpu: 1
+    cpu: 300m
     memory: 600Mi
   requests:
-    cpu: 500m
+    cpu: 100m
     memory: 400Mi
 
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 100
-  targetRps: 400
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
   
 version:
   name: ""
   branch: ""
   image: "placeholder"
+
+secrets:
+  vault: "" #nubium-dev-vault
+  tenantId: "" #2d8cc149-4c57-462b-a1fb-6e548ffd73bd
+  authentication: "" #[pod|vm|assigned]
+  keys: ""
+  #- key1
+  #- key2
+
+certificateSecret: ""
