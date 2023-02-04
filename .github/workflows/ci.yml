@@ -340,7 +340,7 @@ jobs:
 
           export CATALOG_VERSION=$(../../main/tools/increment_version.sh $OLD_CATALOG_VERSION $INCREMENT_CATALOG_VERSION)
           export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
-          export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$CATALOG_VERSION
+          export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:$CATALOG_VERSION
 
           if [[ $FIRST_CATALOG_RUN == false ]]; then
             opm index add --bundles $BUNDLE_IMG --from-index $CATALOG_IMAGE_LATEST --tag $CATALOG_IMAGE_VERSION --build-tool docker --pull-tool docker --debug
