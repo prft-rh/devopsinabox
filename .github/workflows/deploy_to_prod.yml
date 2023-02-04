@@ -59,8 +59,8 @@ jobs:
           export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog-prod:$DEPLOY_VERSION
 
           docker pull $CATALOG_IMAGE_DEV_LATEST
-          docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_DEV_LATEST
-          docker tag $CATALOG_IMAGE_LATEST $CATALOG_IMAGE_DEV_LATEST
+          docker tag $CATALOG_IMAGE_DEV_LATEST $CATALOG_IMAGE_VERSION
+          docker tag $CATALOG_IMAGE_DEV_LATEST $CATALOG_IMAGE_LATEST
           docker push $CATALOG_IMAGE_VERSION
           docker push $CATALOG_IMAGE_LATEST
         shell: bash
