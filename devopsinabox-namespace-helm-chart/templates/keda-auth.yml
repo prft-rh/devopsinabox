@@ -1,0 +1,12 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ include "devops-in-a-box-namespace.fullname" . }}-thanos
+spec:
+  secretTargetRef:
+    - parameter: bearerToken
+      name: {{ include "devops-in-a-box-namespace.fullname" . }}-keda-token
+      key: token
+    - parameter: ca
+      name: {{ include "devops-in-a-box-namespace.fullname" . }}-keda-token
+      key: ca.crt

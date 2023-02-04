@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "devops-in-a-box-namespace.fullname" . }}-keda-auth
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "devops-in-a-box-namespace.fullname" . }}-keda-thanos
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-monitoring-view

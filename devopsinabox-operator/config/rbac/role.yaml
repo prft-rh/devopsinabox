@@ -55,9 +55,11 @@ rules:
 - verbs:
   - "*"
   apiGroups:
-  - "apps"
+  - ""
   resources:
-  - "statefulsets"
+  - "configmaps"
+  - "secrets"
+  - "services"
 - verbs:
   - "*"
   apiGroups:
@@ -68,9 +70,9 @@ rules:
 - verbs:
   - "*"
   apiGroups:
-  - "elasticsearch.k8s.elastic.co"
+  - "logging.openshift.io"
   resources:
-  - "elasticsearches"
+  - "clusterlogforwarders"
 - verbs:
   - "*"
   apiGroups:
@@ -86,17 +88,15 @@ rules:
 - verbs:
   - "*"
   apiGroups:
-  - ""
+  - "apps"
   resources:
-  - "configmaps"
-  - "secrets"
-  - "services"
+  - "statefulsets"
 - verbs:
   - "*"
   apiGroups:
-  - "logging.openshift.io"
+  - "elasticsearch.k8s.elastic.co"
   resources:
-  - "clusterlogforwarders"
+  - "elasticsearches"
 - verbs:
   - "*"
   apiGroups:
@@ -132,25 +132,6 @@ rules:
 - verbs:
   - "*"
   apiGroups:
-  - "batch"
-  resources:
-  - "cronjobs"
-- verbs:
-  - "*"
-  apiGroups:
-  - "argoproj.io"
-  resources:
-  - "applications"
-- verbs:
-  - "*"
-  apiGroups:
-  - "tekton.dev"
-  resources:
-  - "pipelines"
-  - "tasks"
-- verbs:
-  - "*"
-  apiGroups:
   - "monitoring.coreos.com"
   resources:
   - "prometheusrules"
@@ -176,6 +157,25 @@ rules:
   resources:
   - "rolebindings"
   - "roles"
+- verbs:
+  - "*"
+  apiGroups:
+  - "batch"
+  resources:
+  - "cronjobs"
+- verbs:
+  - "*"
+  apiGroups:
+  - "argoproj.io"
+  resources:
+  - "applications"
+- verbs:
+  - "*"
+  apiGroups:
+  - "tekton.dev"
+  resources:
+  - "pipelines"
+  - "tasks"
 
 ##
 ## Rules for apimc.com.perficient/v1alpha1, Kind: SpringBootApp
@@ -197,6 +197,13 @@ rules:
 - verbs:
   - "*"
   apiGroups:
+  - ""
+  resources:
+  - "persistentvolumeclaims"
+  - "services"
+- verbs:
+  - "*"
+  apiGroups:
   - "apps.openshift.io"
   resources:
   - "deploymentconfigs"
@@ -212,13 +219,6 @@ rules:
   - "route.openshift.io"
   resources:
   - "routes"
-- verbs:
-  - "*"
-  apiGroups:
-  - ""
-  resources:
-  - "persistentvolumeclaims"
-  - "services"
 
 ##
 ## Rules for apimc.com.perficient/v1alpha1, Kind: DotNetApp
@@ -240,12 +240,6 @@ rules:
 - verbs:
   - "*"
   apiGroups:
-  - ""
-  resources:
-  - "services"
-- verbs:
-  - "*"
-  apiGroups:
   - "apps"
   resources:
   - "deployments"
@@ -255,6 +249,12 @@ rules:
   - "route.openshift.io"
   resources:
   - "routes"
+- verbs:
+  - "*"
+  apiGroups:
+  - ""
+  resources:
+  - "services"
 
 #+kubebuilder:scaffold:rules
 - verbs:
