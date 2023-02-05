@@ -109,6 +109,23 @@ jobs:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
           ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
 
+      - name: Get last release date
+        run: |
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog-prod/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer '"$TOKEN"'')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
+            START_TS="0"
+            echo "START_TS=$(echo $START_TS)" >> $GITHUB_ENV
+          else
+            START_TS=$(echo "$TAG_ARRAY" | jq -r '.[0].start_ts' )
+            echo "START_TS=$(echo $START_TS)" >> $GITHUB_ENV
+          fi
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
       - name: Delete recent tags
         run: |
           TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer '"$TOKEN"'')
