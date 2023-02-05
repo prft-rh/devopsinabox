@@ -1,0 +1,73 @@
+name: DevOpsInABox Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_devopsinabox:
+
+    name: Deploy DevOpsInABox to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+
+      - name: Check Quay connection
+        run: |
+          STATUS=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1' --header 'Authorization: Bearer $TOKEN' -s -o /dev/null -w '%{http_code}')
+          if [ "$STATUS" -ge "400" ]; then
+            echo "::error::Cannot connect to Quay API.  Status code is $STATUS"
+            exit 1
+          fi
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
+      - name: Get last release date
+        run: |
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog-prod/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
+            START_TS="0"
+            echo "START_TS=$(echo $START_TS)" >> $GITHUB_ENV
+          else
+            START_TS=$(echo "$TAG_ARRAY" | jq -r '.[0].start_ts' )
+            echo "START_TS=$(echo $START_TS)" >> $GITHUB_ENV
+          fi
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
+      - name: Delete recent tags
+        run: |
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
+            echo "no tags to delete in operators-catalog"
+          else
+            echo "$TAG_ARRAY" | jq -r '.[].start_ts' | while read -r TIMESTAMP; do
+              if [[ $TIMESTAMP -gt $START_TS ]]; then
+                echo "deleting timestamp $TIMESTAMP"
+              else
+                break
+              fi
+            done
+
+          fi
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
+      # Login
+      - name: Login to Quay Registry
+        run: |
+          docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
+        shell: bash
+        env:
+          QUAY_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_ROBOT_PASSWORD }}
+
