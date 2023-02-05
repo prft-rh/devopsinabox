@@ -48,9 +48,11 @@ jobs:
           if [ "$TAG_ARRAY" = "[]" ]; then
             echo "no tags to delete in devopsinabox-operator"
           else
-            echo "$TAG_ARRAY" | jq -r '.[].start_ts' | while read -r TIMESTAMP; do
+            echo "$TAG_ARRAY" | jq -r '.[]' | while read -r ARRAY_VALUES; do
+              TIMESTAMP=$(echo "$ARRAY_VALUES" | jq -r '.start_ts)
               if [[ $TIMESTAMP -gt $START_TS ]]; then
                 echo "deleting timestamp $TIMESTAMP in devopsinabox-operator"
+                #curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/' --header 'Authorization: Bearer $TOKEN'
               else
                 break
               fi
@@ -66,6 +68,7 @@ jobs:
             echo "$TAG_ARRAY" | jq -r '.[].start_ts' | while read -r TIMESTAMP; do
               if [[ $TIMESTAMP -gt $START_TS ]]; then
                 echo "deleting timestamp $TIMESTAMP in devopsinabox-operator-bundle"
+                DELETE /api/v1/repository/{repository}/tag/{tag}
               else
                 break
               fi
