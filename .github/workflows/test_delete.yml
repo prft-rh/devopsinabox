@@ -48,7 +48,8 @@ jobs:
           if [ "$TAG_ARRAY" = "[]" ]; then
             echo "no tags to delete in devopsinabox-operator"
           else
-            echo "$TAG_ARRAY" | jq -r '.[]' | while read -r ARRAY_VALUES; do
+            for ARRAY_VALUES in "${TAG_ARRAY[@]}"
+            do
               echo "yay: $ARRAY_VALUES"
               TIMESTAMP=$(echo "$ARRAY_VALUES" | jq -r '.start_ts)
               TAG=$(echo "$ARRAY_VALUES" | jq -r '.name)
