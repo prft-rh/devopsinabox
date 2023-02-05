@@ -42,7 +42,7 @@ jobs:
 
       - name: Delete recent tags
         run: |
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
 
           if [ "$TAG_ARRAY" = "[]" ]; then
@@ -57,7 +57,7 @@ jobs:
             done
           fi
 
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
 
           if [ "$TAG_ARRAY" = "[]" ]; then
@@ -72,7 +72,7 @@ jobs:
             done
           fi
 
-          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer $TOKEN')
           TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
 
           if [ "$TAG_ARRAY" = "[]" ]; then
