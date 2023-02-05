@@ -49,6 +49,7 @@ jobs:
             echo "no tags to delete in devopsinabox-operator"
           else
             echo "$TAG_ARRAY" | jq -r '.[]' | while read -r ARRAY_VALUES; do
+              echo "yay: $ARRAY_VALUES"
               TIMESTAMP=$(echo "$ARRAY_VALUES" | jq -r '.start_ts)
               TAG=$(echo "$ARRAY_VALUES" | jq -r '.name)
               if [[ $TIMESTAMP -gt $START_TS ]]; then
