@@ -53,8 +53,9 @@ jobs:
                  echo ${row} | base64 --decode | jq -r ${1}
                 }
               if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
-                echo "deleting tag $(_jq '.name') with timestamp $(_jq '.start_ts') in devopsinabox-operator"
-                curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/'"$(_jq '.name')"'' --header 'Authorization: Bearer $TOKEN'
+                TAG=$(_jq '.name')
+                echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in devopsinabox-operator"
+                curl --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/'"$TAG"'' --header 'Authorization: Bearer $TOKEN'
               else
                 break
               fi
@@ -72,8 +73,9 @@ jobs:
                  echo ${row} | base64 --decode | jq -r ${1}
                 }
               if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
-                echo "deleting tag $(_jq '.name') with timestamp $(_jq '.start_ts') in devopsinabox-operator-bundle"
-                curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag/'"$(_jq '.name')"'' --header 'Authorization: Bearer $TOKEN'
+                TAG=$(_jq '.name')
+                echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in devopsinabox-operator-bundle"
+                curl --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag/'"$TAG"'' --header 'Authorization: Bearer $TOKEN'
               else
                 break
               fi
@@ -91,8 +93,9 @@ jobs:
                  echo ${row} | base64 --decode | jq -r ${1}
                 }
               if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
-                echo "deleting tag $(_jq '.name') with timestamp $(_jq '.start_ts') in operators-catalog"
-                curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag/'"$(_jq '.name')"'' --header 'Authorization: Bearer $TOKEN'
+                TAG=$(_jq '.name')
+                echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in operators-catalog"
+                curl --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag/'"$TAG"'' --header 'Authorization: Bearer $TOKEN'
               else
                 break
               fi
