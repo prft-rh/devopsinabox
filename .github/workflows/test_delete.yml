@@ -50,8 +50,9 @@ jobs:
           else
             echo "$TAG_ARRAY" | jq -r '.[]' | while read -r ARRAY_VALUES; do
               TIMESTAMP=$(echo "$ARRAY_VALUES" | jq -r '.start_ts)
+              TAG=$(echo "$ARRAY_VALUES" | jq -r '.name)
               if [[ $TIMESTAMP -gt $START_TS ]]; then
-                echo "deleting timestamp $TIMESTAMP in devopsinabox-operator"
+                echo "deleting tag $TAG with timestamp $TIMESTAMP in devopsinabox-operator"
                 #curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/' --header 'Authorization: Bearer $TOKEN'
               else
                 break
