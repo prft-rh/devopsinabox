@@ -1,10 +1,10 @@
 name: DevOpsInABox Development
 
 on:
-#  push:
-#    branches:
-#    - aws
-#    - azure
+  push:
+    branches:
+    - aws
+    - azure
   workflow_dispatch:
     inputs:
       increment_devops_version:
@@ -104,6 +104,85 @@ jobs:
             echo "::error::Cannot connect to Quay API.  Status code is $STATUS"
             exit 1
           fi
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
+      - name: Delete recent tags
+        run: |
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer '"$TOKEN"'')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
+            echo "no tags to delete in devopsinabox-operator"
+          else
+            for row in $(echo "${TAG_ARRAY}" | jq -r '.[] | @base64'); do
+                _jq() {
+                 echo ${row} | base64 --decode | jq -r ${1}
+                }
+              if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
+                TAG=$(_jq '.name')
+                echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in devopsinabox-operator"
+                STATUS=$(curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
+                if [ "$STATUS" -ne "204" ]; then
+                  echo "::error::Cannot delete tag $TAG with Quay API.  Status code is $STATUS"
+                  exit 1
+                fi
+              else
+                break
+              fi
+            done
+          fi
+            
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer '"$TOKEN"'')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
+            echo "no tags to delete in devopsinabox-operator-bundle"
+          else
+            for row in $(echo "${TAG_ARRAY}" | jq -r '.[] | @base64'); do
+                _jq() {
+                 echo ${row} | base64 --decode | jq -r ${1}
+                }
+              if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
+                TAG=$(_jq '.name')
+                echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in devopsinabox-operator-bundle"
+                STATUS=$(curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
+                if [ "$STATUS" -ne "204" ]; then
+                  echo "::error::Cannot delete tag $TAG with Quay API.  Status code is $STATUS"
+                  exit 1
+                fi
+              else
+                break
+              fi
+            done
+          fi
+
+          TAG_DATA=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=100&onlyActiveTags=true' --header 'Authorization: Bearer '"$TOKEN"'')
+          TAG_ARRAY=$(echo $TAG_DATA | jq .tags)
+
+          if [ "$TAG_ARRAY" = "[]" ]; then
+            echo "no tags to delete in operators-catalog"
+          else
+            for row in $(echo "${TAG_ARRAY}" | jq -r '.[] | @base64'); do
+                _jq() {
+                 echo ${row} | base64 --decode | jq -r ${1}
+                }
+              if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
+                TAG=$(_jq '.name')
+                echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in operators-catalog"
+                STATUS=$(curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
+                if [ "$STATUS" -ne "204" ]; then
+                  echo "::error::Cannot delete tag $TAG with Quay API.  Status code is $STATUS"
+                  exit 1
+                fi
+              else
+                break
+              fi
+            done
+          fi
+
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}

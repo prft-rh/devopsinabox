@@ -11,10 +11,10 @@ jobs:
     timeout-minutes: 4
     steps:
 
-      - name: Check Quay connection
+      - name: Basic Quay connection check
         run: |
           STATUS=$(curl --location --request GET 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag?limit=1' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
-          if [ "$STATUS" -ge "400" ]; then
+          if [ "$STATUS" -ne "200" ]; then
             echo "::error::Cannot connect to Quay API.  Status code is $STATUS"
             exit 1
           fi
@@ -55,7 +55,11 @@ jobs:
               if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
                 TAG=$(_jq '.name')
                 echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in devopsinabox-operator"
-                curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"''
+                STATUS=$(curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
+                if [ "$STATUS" -ne "204" ]; then
+                  echo "::error::Cannot delete tag $TAG with Quay API.  Status code is $STATUS"
+                  exit 1
+                fi
               else
                 break
               fi
@@ -75,7 +79,11 @@ jobs:
               if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
                 TAG=$(_jq '.name')
                 echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in devopsinabox-operator-bundle"
-                curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"''
+                STATUS=$(curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/devopsinabox-operator-bundle/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
+                if [ "$STATUS" -ne "204" ]; then
+                  echo "::error::Cannot delete tag $TAG with Quay API.  Status code is $STATUS"
+                  exit 1
+                fi
               else
                 break
               fi
@@ -95,7 +103,11 @@ jobs:
               if [[ $(_jq '.start_ts') -gt $START_TS ]]; then
                 TAG=$(_jq '.name')
                 echo "deleting tag $TAG with timestamp $(_jq '.start_ts') in operators-catalog"
-                curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"''
+                STATUS=$(curl --location --request DELETE 'https://quay.io/api/v1/repository/'"$ORGANIZATION"'/operators-catalog/tag/'"$TAG"'' --header 'Authorization: Bearer '"$TOKEN"'' -s -o /dev/null -w '%{http_code}')
+                if [ "$STATUS" -ne "204" ]; then
+                  echo "::error::Cannot delete tag $TAG with Quay API.  Status code is $STATUS"
+                  exit 1
+                fi
               else
                 break
               fi
@@ -104,7 +116,7 @@ jobs:
 
         shell: bash
         env:
-          TOKEN: 81dMRBlNkusu38MihuyGUSZeuOhmzK0XuK0kGEKu
+          TOKEN: ${{ secrets.QUAY_API_TOKEN }}
           ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
 
       # Login
