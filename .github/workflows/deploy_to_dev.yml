@@ -366,6 +366,18 @@ jobs:
           QUAY_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_ROBOT_PASSWORD }}
 
+      - name: Restore latest catalog
+        run: |
+          export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
+          export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:v$OLD_CATALOG_VERSION
+
+          docker pull CATALOG_IMAGE_VERSION
+          docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
+          docker push $CATALOG_IMAGE_LATEST
+        shell: bash
+        env:
+          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+
       - name: Generate operator files
         run: |
           cd branch
