@@ -21,7 +21,7 @@ jobs:
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
-          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+          ORGANIZATION: ${{ vars.QUAY_ORGANIZATION }}
 
       - name: Get version to deploy
         run: |
@@ -40,7 +40,7 @@ jobs:
         shell: bash
         env:
           TOKEN: ${{ secrets.QUAY_API_TOKEN }}
-          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+          ORGANIZATION: ${{ vars.QUAY_ORGANIZATION }}
 
       # Login
       - name: Login to Quay Registry
@@ -48,7 +48,7 @@ jobs:
           docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
         shell: bash
         env:
-          QUAY_USERNAME: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          QUAY_USERNAME: ${{ vars.QUAY_ROBOT_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_ROBOT_PASSWORD }}
 
       - name: Push dev catalog to prod
@@ -65,4 +65,4 @@ jobs:
           docker push $CATALOG_IMAGE_LATEST
         shell: bash
         env:
-          ORGANIZATION: ${{ secrets.QUAY_ORGANIZATION }}
+          ORGANIZATION: ${{ vars.QUAY_ORGANIZATION }}

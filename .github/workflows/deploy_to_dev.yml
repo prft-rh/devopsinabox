@@ -372,14 +372,8 @@ jobs:
             export CATALOG_IMAGE_LATEST=quay.io/$ORGANIZATION/operators-catalog:latest
             export CATALOG_IMAGE_VERSION=quay.io/$ORGANIZATION/operators-catalog:$OLD_CATALOG_VERSION
 
-            echo "test"
-            echo "$CATALOG_IMAGE_VERSION"
-            echo "test a"
-
             docker pull $CATALOG_IMAGE_VERSION
-            echo "test b"
             docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
-            echo "test c"
             docker push $CATALOG_IMAGE_LATEST
           fi
         shell: bash
