@@ -376,7 +376,7 @@ jobs:
             echo "$CATALOG_IMAGE_VERSION"
             echo "test a"
 
-            docker pull CATALOG_IMAGE_VERSION
+            docker pull $CATALOG_IMAGE_VERSION
             echo "test b"
             docker tag $CATALOG_IMAGE_VERSION $CATALOG_IMAGE_LATEST
             echo "test c"
