@@ -315,6 +315,8 @@ jobs:
           operator-sdk version
           echo "::notice::git version"
           git --version
+          echo "::notice::oc version"
+          oc version
           echo "::notice::opm version"
           opm version
           echo "::notice::helm version"
@@ -360,11 +362,15 @@ jobs:
       # Login
       - name: Login to Quay Registry
         run: |
+          oc login $OC_SERVER --username=$OC_USERNAME --password=$OC_PASSWORD
           docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
         shell: bash
         env:
           QUAY_USERNAME: ${{ vars.QUAY_ROBOT_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_ROBOT_PASSWORD }}
+          OC_SERVER: ${{ vars.OC_SERVER }}
+          OC_USERNAME: ${{ vars.OC_USERNAME }}
+          OC_PASSWORD: ${{ secrets.OC_PASSWORD }}
 
       - name: Restore latest catalog
         run: |
