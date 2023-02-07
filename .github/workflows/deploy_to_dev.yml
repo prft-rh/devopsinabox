@@ -360,7 +360,7 @@ jobs:
         shell: bash
 
       # Login
-      - name: Login to Quay Registry
+      - name: Login to Openshift and Quay Registry
         run: |
           oc login $OC_SERVER --username=$OC_USERNAME --password=$OC_PASSWORD
           docker login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
