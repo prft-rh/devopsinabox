@@ -16,5 +16,5 @@ jobs:
 
       - name: Test run
         run: |
-          echo "it worked."
+          echo "it worked..."
         shell: bash
