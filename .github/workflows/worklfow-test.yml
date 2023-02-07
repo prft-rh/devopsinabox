@@ -5,3 +5,16 @@ on:
       parameter:
         description: default param
   push:
+
+jobs:
+  - job: Testing
+    timeoutInMinutes: 1
+
+    displayName: Testing Deploy
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+      - script: |
+          echo "it worked."
+        displayName: 'Echo'
