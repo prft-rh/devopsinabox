@@ -15,3 +15,4 @@ spec:
           requests:
             cpu: 200m
             memory: 2048Mi
+        imagePullPolicy: Always
