@@ -7,7 +7,7 @@ on:
   push:
 
 jobs:
-  build_a workflow:
+  build_a_workflow:
 
     name: Testing
     runs-on: ubuntu-latest
