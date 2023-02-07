@@ -7,14 +7,14 @@ on:
   push:
 
 jobs:
-  - job: Testing
-    timeoutInMinutes: 1
+  build_a workflow:
 
-    displayName: Testing Deploy
-    pool:
-      vmImage: ubuntu-latest
+    name: Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
     steps:
 
-      - script: |
+      - name: Test run
+        run: |
           echo "it worked."
-        displayName: 'Echo'
+        shell: bash
