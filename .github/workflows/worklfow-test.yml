@@ -1,0 +1,7 @@
+name: 'Workflow Test'
+on:
+  workflow_dispatch:
+    inputs:
+      parameter:
+        description: default param
+  push:
