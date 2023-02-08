@@ -24,5 +24,5 @@ spec:
         authModes: "bearer"
       type: prometheus
       authenticationRef:
-        name: {{ include "devops-in-a-box.fullname" . }}-thanos
+        name: devopsinabox-thanos
 {{- end }}
