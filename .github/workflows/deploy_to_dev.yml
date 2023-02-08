@@ -420,8 +420,8 @@ jobs:
             apiGroups:
             - "keda.sh"
             resources:
-            - "TriggerAuthentication"
-            - "ScaledObject"
+            - "triggerauthentications"
+            - "scaledobjects"
           EOF
 
           if [[ $OVERRIDE_VERSION == false ]]; then
