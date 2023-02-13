@@ -68,3 +68,29 @@ version:
   name: ""
   branch: ""
   image: "placeholder"
+
+# https://external-secrets.io/v0.7.2/api/secretstore/
+# https://external-secrets.io/v0.7.2/api/clustersecretstore/
+# https://external-secrets.io/v0.7.2/provider/aws-secrets-manager/
+
+#externalSecretStores:
+#  - name: # required; metadata
+#    namespace: # optional; metadata
+#    labels: # optional; metadata
+#    annotations: # optional; metadata
+#    kind: # required; SecretStore or ClusterSecretStore
+#    provider: # required; the full yaml for a provider. examples: aws, azurekv, gcpsm, vault
+#    conditions: # optional; only for ClusterSecretStore
+#    controller: # optional
+#    retrySettings: # optional; only for SecretStore
+
+# https://external-secrets.io/v0.7.2/api/externalsecret/
+# https://external-secrets.io/v0.7.2/api/clusterexternalsecret/
+
+#externalSecretValues:
+#  - name: # required; metadata
+#    namespace: # optional; metadata
+#    labels: # optional; metadata
+#    annotations: # optional; metadata
+#    kind: # required; ExternalSecret or ClusterExternalSecret
+#    spec: # required; the full yaml for a external secret spec
