@@ -13,7 +13,7 @@ spec:
       application:
         selector:
           matchLabels:
-            perficient_com/runtime: spring-boot
+            perficient.com/runtime: spring-boot
   outputDefaults:
     elasticsearch:
       structuredTypeKey: kubernetes.container_name
